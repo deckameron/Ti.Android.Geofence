@@ -40,15 +40,15 @@ button_add.addEventListener('click', function(){
         clearExistingFences : false,
         fences : [
             {
-                "id" : "Outback",
-                "latitude" : -19.920569,
-                "longitude" : -43.921137,
-                "radius" : 150,
+                "id" : "google",
+                "latitude" : 37.422196,
+                "longitude" : -122.084004,
+                "radius" : 1000,
                 "transitions" : [
                     geofence.GEOFENCE_TRANSITION_ENTER
                 ],
                 //Notification 
-                "title" : "Restaurante Outback",
+                "title" : "Google - Mountain View",
                 "sound" : "notification",
                 "accentColor" : "#E65100",
                 "type" : geofence.TYPE_PLACE_FENCE,
@@ -56,15 +56,16 @@ button_add.addEventListener('click', function(){
                 //"bigImage" : "https://lh3.googleusercontent.com/jOsYWBsr1muoRiMQFW9EU-ZqSCtfLBibu6S2g4nIbihP0SYL4Em6VD20WuieL1h5bBzbSrnIYVQZy5lhjUSR"
             },
             {
-                "id" : "Luiz",
-                "latitude" : -19.84160077,
-                "longitude" : -43.93884106,
-                "radius" : 150,
+                "id" : "tesla",
+                "latitude" : 37.394834,
+                "longitude" : -122.150046,
+                "radius" : 700,
                 "transitions" : [
-                    geofence.GEOFENCE_TRANSITION_ENTER
+                    geofence.GEOFENCE_TRANSITION_ENTER,
+                    geofence.GEOFENCE_TRANSITION_DWELL
                 ],
                 //Notification 
-                "title" : "Casa do Luiz",
+                "title" : "Tesla HQ",
                 "sound" : "notification",
                 "accentColor" : "#E65100",
                 "type" : geofence.TYPE_PLACE_FENCE,
@@ -72,69 +73,20 @@ button_add.addEventListener('click', function(){
                 //"bigImage" : "https://static.wixstatic.com/media/92734c_31512f187c9241149ba53ee30e7ca7f7~mv2.jpg_256"
             },
             {
-                "id" : "Casa",
-                "latitude" : -19.89788818,
-                "longitude" : -43.92246886,
-                "radius" : 150,
+                "id" : "apple",
+                "latitude" : 37.331829,
+                "longitude" : -122.029749,
+                "radius" : 1000,
                 "transitions" : [
                     geofence.GEOFENCE_TRANSITION_DWELL
                 ],
                 //Notification 
-                "title" : "Home Sweet Home",
+                "title" : "Apple Infinite Loop",
                 "sound" : "notification",
                 "accentColor" : "#E65100",
                 "type" : geofence.TYPE_PLACE_FENCE,
                 "showPlaceBigImage" : true,
                 //"bigImage" : "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F38585705%2F47533216579%2F1%2Foriginal.jpg?h=512&w=512&auto=compress&rect=0%2C40%2C500%2C250&s=c87e485256c42bd0c9f181eb9c371a3f"
-            },
-            {
-                "id" : "Tups",
-                "latitude" : -19.95899221,
-                "longitude" : -43.93085491,
-                "radius" : 150,
-                "transitions" : [
-                    geofence.GEOFENCE_TRANSITION_DWELL,
-                    geofence.GEOFENCE_TRANSITION_ENTER
-                ],
-                //Notification 
-                "title" : "Casa do Tups",
-                "sound" : "notification",
-                "accentColor" : "#E65100",
-                "type" : geofence.TYPE_PLACE_FENCE,
-                "showPlaceBigImage" : true,
-                //"bigImage" : "https://i.pinimg.com/originals/e0/db/87/e0db879bd7f0cfaf10266ce05f4ab926.jpg"
-            },
-            {
-                "id" : "em",
-                "latitude" : -19.9334664,
-                "longitude" : -43.92671121,
-                "radius" : 200,
-                "transitions" : [
-                    geofence.GEOFENCE_TRANSITION_ENTER
-                ],
-                //Notification 
-                "title" : "Estado de Minas",
-                "sound" : "notification",
-                "accentColor" : "#E65100",
-                "type" : geofence.TYPE_PLACE_FENCE,
-                "showPlaceBigImage" : true,
-                //"bigImage" : "https://www.cartamaior.com.br/arquivosCartaMaior/FOTO/149/A0B327F4137E11E0619283C75006AAC0528734ED8D09B13C12CF1F6AF22BC5EA.png"
-            },
-            {
-                "id" : "Kasbah",
-                "latitude" : -19.93328338,
-                "longitude" : -43.92952192,
-                "radius" : 150,
-                "transitions" : [
-                    geofence.GEOFENCE_TRANSITION_ENTER
-                ],
-                //Notification 
-                "title" : "Restaurante Kasbah",
-                "sound" : "notification",
-                "accentColor" : "#E65100",
-                "type" : geofence.TYPE_PLACE_FENCE,
-                "showPlaceBigImage" : true,
-                //"bigImage" : "https://d2rlg75vf4lcam.cloudfront.net/uploads/restaurant_picture/picture/17769/restaurant_detail_ambiente-.jpg"
             }
         ]
     });
