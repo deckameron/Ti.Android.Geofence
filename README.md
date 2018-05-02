@@ -10,6 +10,9 @@ This module adds support for using Geofence in Titanium Apps.
 It can monitor all geofence transitions and fire a local notification as well. You can customize the notification in order to fit your needs.
 **This module works when the app is in foreground, background, closed, after phone restart, App data cleared and if location providers get changed.**
 
+#### Titanium SDK
+Will work only with **7+**
+
 ### Download
 
 Download the Ti.Android.Geofence module through the  [here](https://github.com/deckameron/Ti.Android.Geofence/blob/master/android/dist/ti.android.geofence-1.0.zip).
