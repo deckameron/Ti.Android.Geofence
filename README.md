@@ -11,7 +11,7 @@ It can monitor all geofence transitions and fire a local notification as well. Y
 
 ### Download
 
-Download the Ti.Android.Geofence module through the  [here](https://github.com/deckameron/Ti.Android.Geofence/blob/master/android/dist/ti.android.geofence-1.0.zip).
+Download the Ti.Android.Geofence module through the  [here](https://github.com/deckameron/Ti.Android.Geofence/tree/master/android/dist).
 
 ## How to use it
 
