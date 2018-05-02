@@ -4,7 +4,6 @@ var locationAllowed = false;
 var window = Titanium.UI.createWindow({
     backgroundColor : '#F2F2F2',
     layout : 'vertical',
-    theme : 'Theme.MyTheme'
 }); 
 
  window.addEventListener('open', function(){
