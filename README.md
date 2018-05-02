@@ -106,6 +106,7 @@ Please take a look at the full example of the [module being used](https://github
 # Methods
 
 All your files are listed in the file explorer. You can switch from one to another by clicking a file in the list.
+
 |Methods                |Description                          |
 |----------------|-------------------------------|
 |addGeofences			|Passes the fences to the module                       
