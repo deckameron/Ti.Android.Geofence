@@ -303,7 +303,7 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
                     .setExpirationDuration(Geofence.NEVER_EXPIRE)
                     
                     // Set the period of time the user neeeds to be inside the fence.
-                    .setLoiteringDelay(Constants.GEOFENCE_DWELL_TIME_IN_MILLISECONDS)
+                    .setLoiteringDelay(((Double)entry.getValue().get("dwellTime")).intValue())
 
                     // Set the transition types of interest. Alerts are only generated for these
                     // transition. We track entry and exit transitions in this sample.
@@ -386,6 +386,10 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
     				fenceData.put("latitude", TiConvert.toDouble(fence.get("latitude")));
     				fenceData.put("longitude", TiConvert.toDouble(fence.get ("longitude")));
     				fenceData.put("radius", TiConvert.toDouble(fence.get ("radius")));
+				
+				if(fence.containsKey("transitions")){
+    					fenceData.put("dwellTime", TiConvert.toDouble(fence.get ("dwellTime")));
+    				}
     				
     				if(fence.containsKey("transitions")){
     					Object[] transitions =  (Object[]) fence.get("transitions");
