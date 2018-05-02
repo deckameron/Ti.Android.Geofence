@@ -194,6 +194,8 @@ These events can only be monitored when your app is in foreground or in backgrou
 # Necessary Libs
 
 ### Google Play Services
+You can extract them from [Ti.PlayServices](https://github.com/appcelerator-modules/ti.playservices)
+
 google-play-services-maps.jar
 google-play-services-location.jar
 google-play-services-basement.jar
@@ -201,6 +203,8 @@ google-play-services-tasks.jar
 google-play-services-base.jar
 
 ### Android Support
+These can be found at "/Library/Application Support/Titanium/mobilesdk/osx/7.0.0.GA/android"
+
 android-support-v7-appcompat.jar
 android-support-design.jar
 android-support-annotations.jar
