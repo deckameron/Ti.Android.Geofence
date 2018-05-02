@@ -1,4 +1,4 @@
-# Ti.Android.Geofence [![gittio](http://img.shields.io/badge/gittio-3.0.1-00B4CC.svg)]
+# Ti.Android.Geofence ![gittio](http://img.shields.io/badge/gittio-3.0.1-00B4CC.svg)
 
 Appcelerator Android module wrapping Geofence functionalities
 
