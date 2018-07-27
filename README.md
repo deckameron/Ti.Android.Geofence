@@ -53,50 +53,52 @@ geofence.addGeofences({
 		{
 			"id" : "google",
 			"latitude" : 37.422196,
-			"longitude" :  -122.084004,
+			"longitude" : -122.084004,
 			"radius" : 1000,
-			"transitions" :  [
+			"transitions" : [
 				geofence.GEOFENCE_TRANSITION_ENTER
 			],
-			//Notification
-			"title" :  "Google - Mountain View",
-			"sound" :  "notification",
-			"accentColor" :  "#E65100",
-			"type" :  geofence.TYPE_PLACE_FENCE,
-			"showGooglePlaceBigImage" :  true,
-			//"bigImage" :"https://lh3.googleusercontent.com/jOsYWBsr1muoRiMQFW9EU-ZqSCtfLBibu6S2g4nIbihP0SYL4Em6VD20WuieL1h5bBzbSrnIYVQZy5lhjUSR"
+			//Notification 
+			"title" : "Google - Mountain View",
+			"sound" : "notification",
+			"accentColor" : "#E65100",
+			"type" : geofence.TYPE_PLACE_FENCE,
+			"showGooglePlaceBigImage" : true,
+			//"bigImage" : "https://lh3.googleusercontent.com/jOsYWBsr1muoRiMQFW9EU-ZqSCtfLBibu6S2g4nIbihP0SYL4Em6VD20WuieL1h5bBzbSrnIYVQZy5lhjUSR"
 		},
 		{
 			"id" : "tesla",
-			"latitude" :  37.394834,
-			"longitude" :  -122.150046,
-			"radius" :  700,
+			"latitude" : 37.394834,
+			"longitude" : -122.150046,
+			"radius" : 700,
 			"transitions" : [
 				geofence.GEOFENCE_TRANSITION_ENTER,
 				geofence.GEOFENCE_TRANSITION_DWELL
 			],
-			//Notification
+			"dwellTime" : (5 * 60 * 1000).toFixed(2),
+			//Notification 
 			"title" : "Tesla HQ",
-			"sound" :  "notification",
-			"accentColor" :  "#E65100",
-			"type" :  geofence.TYPE_PLACE_FENCE,
-			"showGooglePlaceBigImage" :  true,
+			"sound" : "notification",
+			"accentColor" : "#E65100",
+			"type" : geofence.TYPE_PLACE_FENCE,
+			"showGooglePlaceBigImage" : true,
 			//"bigImage" : "https://static.wixstatic.com/media/92734c_31512f187c9241149ba53ee30e7ca7f7~mv2.jpg_256"
 		},
 		{
 			"id" : "apple",
-			"latitude" :  37.331829,
-			"longitude" :  -122.029749,
-			"radius" :  1000,
-			"transitions" :  [
-				geofence.GEOFENCE_TRANSITION_EXIT
+			"latitude" : 37.331829,
+			"longitude" : -122.029749,
+			"radius" : 1000,
+			"transitions" : [
+				geofence.GEOFENCE_TRANSITION_DWELL
 			],
-			//Notification
-			"title" :  "Apple Infinite Loop",
-			"sound" :  "notification",
-			"accentColor" :  "#E65100",
-			"type" :  geofence.TYPE_PLACE_FENCE,
-			"showGooglePlaceBigImage" :  true,
+			"dwellTime" : (3 * 60 * 1000).toFixed(2),
+			//Notification 
+			"title" : "Apple Infinite Loop",
+			"sound" : "notification",
+			"accentColor" : "#E65100",
+			"type" : geofence.TYPE_PLACE_FENCE,
+			"showGooglePlaceBigImage" : true,
 			//"bigImage" : "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F38585705%2F47533216579%2F1%2Foriginal.jpg?h=512&w=512&auto=compress&rect=0%2C40%2C500%2C250&s=c87e485256c42bd0c9f181eb9c371a3f"
 		}
 	]
