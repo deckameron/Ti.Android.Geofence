@@ -63,7 +63,7 @@ button_add.addEventListener('click', function(){
                     geofence.GEOFENCE_TRANSITION_ENTER,
                     geofence.GEOFENCE_TRANSITION_DWELL
                 ],
-                "dwellTime" : 5 * 60 * 1000,
+                "dwellTime" : (5 * 60 * 1000).toFixed(2),
                 //Notification 
                 "title" : "Tesla HQ",
                 "sound" : "notification",
@@ -80,7 +80,7 @@ button_add.addEventListener('click', function(){
                 "transitions" : [
                     geofence.GEOFENCE_TRANSITION_DWELL
                 ],
-                "dwellTime" : 3 * 60 * 1000,
+                "dwellTime" : (3 * 60 * 1000).toFixed(2),
                 //Notification 
                 "title" : "Apple Infinite Loop",
                 "sound" : "notification",
