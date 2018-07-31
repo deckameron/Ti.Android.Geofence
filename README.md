@@ -15,7 +15,7 @@ Will work only with **7+**
 
 ### Download
 
-Download the Ti.Android.Geofence module through the  [here](https://github.com/deckameron/Ti.Android.Geofence/blob/master/android/dist/ti.android.geofence-1.0.zip).
+Download the Ti.Android.Geofence module through the  [here](https://github.com/deckameron/Ti.Android.Geofence/tree/master/android/dist).
 
 ### Looking for an iOS solution?
 Try [this module](https://github.com/deckameron/ci.geofencing).
