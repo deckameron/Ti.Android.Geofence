@@ -145,7 +145,7 @@ You can delete the current file by clicking the **Remove** button in the file ex
 |longitude    		|_(Number)_  - longitude of fence center
 |radius    			|_(Number)_  - fence radius
 |dwellTime    		|_(Number)_  - the amount of time the user has to remain inside the fence. The time is MILLISECONDS.
-|canNotify    		|_(Number)_  - If you want the notication to be shown.
+|canNotify    		|_(Boolean)_  - If you want the notication to be shown.
 |transitions    	|_(Array)_  - You can monitor different types of transition for different fences. You can monitor all of them at once or only the ones you need. The possibilities are : _geofence.GEOFENCE_TRANSITION_ENTER, geofence.GEOFENCE_TRANSITION_EXIT and geofence.GEOFENCE_TRANSITION_DWELL_
 |title    			|_(String)_  - **Notification** - The notification's title
 |message    			|_(String)_  - **Notification** - The notification's text content (excluding the title)
