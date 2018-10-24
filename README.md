@@ -197,7 +197,7 @@ These events can only be monitored when your app is in foreground or in backgrou
 # Necessary Libs
 
 ### Google Play Services
-You can extract them from [Ti.PlayServices](https://github.com/appcelerator-modules/ti.playservices)
+You can extract them from [Ti.PlayServices](https://github.com/appcelerator-modules/ti.playservices/tree/master/android/lib)
 
 #### google-play-services-maps.jar
 #### google-play-services-location.jar
