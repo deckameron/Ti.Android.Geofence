@@ -135,8 +135,8 @@ This method will add all fences you need to the module. Remember that Google Geo
 
 |Attributes             |Description                          |
 |----------------|-------------------------------|
-|id					|_(Boolean)_ - clear all existing fences before adding new ones                   
-|type    			|_(String)_  - 
+|id					|_(String)_ - an unique id of your choosing                   
+|type    			|_(String)_ - the type is a free string in case you want to have more control of your fences. For example : "standard", "master_fence" or "fence_updater"       
 |latitude    		|_(Number)_  - latitude of fence center
 |longitude    		|_(Number)_  - longitude of fence center
 |radius    			|_(Number)_  - fence radius
