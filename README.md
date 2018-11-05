@@ -15,7 +15,7 @@ Will work only with **7+**
 
 ### Download
 
-Download the Ti.Android.Geofence module through the  [here](https://github.com/deckameron/Ti.Android.Geofence/tree/master/android/dist).
+Download the Ti.Android.Geofence module [here](https://github.com/deckameron/Ti.Android.Geofence/tree/master/android/dist).
 
 ### Looking for an iOS solution?
 Try [this module](https://github.com/deckameron/ci.geofencing).
@@ -114,8 +114,6 @@ Please take a look at the full example of the [module being used](https://github
  
 # Methods
 
-All your files are listed in the file explorer. You can switch from one to another by clicking a file in the list.
-
 |Methods                |Description                          |
 |----------------|-------------------------------|
 |addGeofences			|Passes the fences to the module                       
@@ -134,8 +132,6 @@ This method will add all fences you need to the module. Remember that Google Geo
 |fences    	|_(Array)_  - List of fences objects
 
 ### Fences object
-
-You can delete the current file by clicking the **Remove** button in the file explorer. The file will be moved into the **Trash** folder and automatically deleted after 7 days of inactivity.
 
 |Attributes             |Description                          |
 |----------------|-------------------------------|
@@ -180,7 +176,7 @@ This method will just stop the monitoring service for the current fences. It wil
 
 # Events
 
-These events can only be monitored when your app is in foreground or in background. They will never fire when you app you closed because the instance of your application does not exist.
+These events can only be monitored when your app is in foreground or in background. They will never fire when your app is closed because the instance of your application does not exist.
 
 |Events                |Description                          |
 |----------------|-------------------------------|
