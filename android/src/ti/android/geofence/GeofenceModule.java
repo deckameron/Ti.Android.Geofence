@@ -27,8 +27,6 @@ import org.appcelerator.titanium.io.TiBaseFile;
 import org.appcelerator.titanium.io.TiFileFactory;
 import org.appcelerator.titanium.util.TiColorHelper;
 import org.appcelerator.titanium.util.TiConvert;
-import org.appcelerator.titanium.util.TiRHelper;
-import org.appcelerator.titanium.util.TiRHelper.ResourceNotFoundException;
 import org.appcelerator.titanium.util.TiUIHelper;
 import org.appcelerator.kroll.common.Log;
 
@@ -37,7 +35,6 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.Manifest;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -195,7 +192,10 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 	    
 	    HashMap fenceData = (HashMap) fencesHashMap.get(fenceId);
 	    
+	    //CanNotify
+	    data.put("canNotify", fenceData.get("canNotify"));
 		//Strings
+	    data.put("id", fenceId);
 		data.put("title", fenceData.get("title"));
 		data.put("alert", fenceData.get("message"));
 		//Colors
@@ -209,8 +209,12 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 		data.put("custom", javascriptFencesArray);
 		
 		data.put("event", event);
-    	
-    	showLocalNotification(data);
+		
+    	if((boolean) fenceData.get("canNotify")){
+    		showLocalNotification(data);
+    	}else{
+    		Log.w(LCAT, "NOTIFICATIONS ARE DESISABLED FOR THIS FENCE!");
+    	}
     	
     	if (TiApplication.getAppCurrentActivity() != null && getModuleInstance() != null) {
 	 		KrollDict props = new KrollDict();
@@ -293,9 +297,9 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 
                     // Set the circular region of this geofence.
                     .setCircularRegion(
-                    		(Double) entry.getValue().get("latitude"),
-                    		(Double) entry.getValue().get("longitude"),
-                            ((Double) entry.getValue().get("radius")).floatValue()
+                		(Double) entry.getValue().get("latitude"),
+                		(Double) entry.getValue().get("longitude"),
+                        ((Double) entry.getValue().get("radius")).floatValue()
                     )
 
                     // Set the expiration duration of the geofence. This geofence gets automatically
@@ -382,13 +386,16 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
     				HashMap fenceData = new HashMap();
     				String fenceId = TiConvert.toString(fence.get("id"));
     				
-    				//GEofence Data
+    				//Geofence Data
     				fenceData.put("latitude", TiConvert.toDouble(fence.get("latitude")));
     				fenceData.put("longitude", TiConvert.toDouble(fence.get ("longitude")));
     				fenceData.put("radius", TiConvert.toDouble(fence.get ("radius")));
-				
-				if(fence.containsKey("transitions")){
-    					fenceData.put("dwellTime", TiConvert.toDouble(fence.get ("dwellTime")));
+    				
+    				if(fence.containsKey("dwellTime")){
+    					fenceData.put("dwellTime", TiConvert.toDouble(fence.get("dwellTime")));
+    				}else{
+    					Integer dwellTime = (3 * 60 * 1000);
+    					fenceData.put("dwellTime", TiConvert.toDouble(dwellTime));
     				}
     				
     				if(fence.containsKey("transitions")){
@@ -401,6 +408,12 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 						}
     					
     					fenceData.put("transitions", Double.parseDouble(String.valueOf(transitionBitwise)));
+    				}
+    				
+    				if(fence.containsKey("canNotify")){
+    					fenceData.put("canNotify", TiConvert.toDouble(fence.get("canNotify")));
+    				}else{
+    					fenceData.put("canNotify", true);
     				}
     				
     				if(fence.containsKey("type")){
@@ -449,12 +462,12 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
     				if(fence.containsKey("bigImage")){
     					fenceData.put("bicon", TiConvert.toString(fence.get("bigImage")));
     					
-    					if(fence.containsKey("showPlaceBigImage")){
+    					if(fence.containsKey("showGooglePlaceBigImage")){
     			        	Log.w(LCAT, "showPlaceBigImage param is ignored when bigImage is set");
     					}
     					
-    				}else if(fence.containsKey("showPlaceBigImage")){
-    					if(TiConvert.toBoolean(fence.containsKey("showPlaceBigImage")) == true){
+    				}else if(fence.containsKey("showGooglePlaceBigImage")){
+    					if(TiConvert.toBoolean(fence.containsKey("showGooglePlaceBigImage")) == true){
     						String imageUrl = "https://maps.googleapis.com/maps/api/streetview?size=512x256&location=" + TiConvert.toString(fence.get("latitude")) + "," + TiConvert.toString(fence.get("longitude")) + "&fov=120&pitch=0";
         					fenceData.put("bicon", imageUrl);
     					}
@@ -549,11 +562,6 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 	    	}
 	    }
 	}
-	
-	//TODO
-	/*
-	- Fazer o serviço reeinserir as Fences quando o telefone for reiniciado
-	*/
 	
 	@Kroll.constant
     public static final String ENTERED = Constants.GEOFENCES_ENTERED;
