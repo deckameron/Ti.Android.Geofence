@@ -7,8 +7,7 @@ final class Constants {
 
 	private static final String PACKAGE_NAME = "ti.android.geofence";
 
-	static final String GEOFENCES_ADDED_KEY = PACKAGE_NAME
-			+ ".GEOFENCES_ADDED_KEY";
+	static final String GEOFENCES_ADDED_KEY = PACKAGE_NAME + ".GEOFENCES_ADDED_KEY";
 
 	static final String GEOFENCES_ENTERED = "ENTERED";
 	static final String GEOFENCES_EXITED = "EXITED";
@@ -16,7 +15,7 @@ final class Constants {
 	static final String GEOFENCES_ERROR = "ERROR";
 	static final String STARTED_MONITORING = "STARTED_MONITORING";
 	static final String STOPPED_MONITORING = "STOPPED_MONITORING";
-	static final String GEOFENCES_ADDED = "STOPED_MONITORING";
+	static final String GEOFENCES_ADDED = "GEOFENCES_ADDED";
 	static final String NOTIFICATION_CLICKED = "NOTIFICATION_CLICKED";
 	static final String NOTIFIED = "NOTIFIED";
 	static final String TYPE_MASTER_ZONE = "1";

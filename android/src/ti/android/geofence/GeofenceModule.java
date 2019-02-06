@@ -30,8 +30,10 @@ import org.appcelerator.titanium.util.TiConvert;
 import org.appcelerator.titanium.util.TiUIHelper;
 import org.appcelerator.kroll.common.Log;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.Manifest;
@@ -43,6 +45,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -68,6 +71,8 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 	private static final String LCAT = "GeofenceModule";
 	private static final String PROPERTY_PREFIX = GeofenceModule.class.getName();
 	private static final String ModuleName = "Geofence";
+	
+	private static String serviceName;
 
 	private static HashMap< String, HashMap< String, Object>> FENCES = new HashMap<String, HashMap<String, Object>>();
 	
@@ -87,9 +92,14 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
  	public static final String PROPERTY_REG_ID = PROPERTY_PREFIX + ".registrationId";
  	public static final String PROPERTY_NOTIFICATION_ID = PROPERTY_PREFIX + ".notificationId";
  	public static final String PROPERTY_EXTRAS = PROPERTY_PREFIX + ".extras";
+ 	public static final String DEFAULT_CHANNEL_ID = "ti.android.geofence.defaultchannel";
+	public static final String DEFAULT_CHANNEL_NAME = "Push Notifications";
  	
  	FileOutputStream fileOutputStream;
 	ObjectOutputStream objectOutputStream;
+	
+	public static HashMap<String, Object> localNotificationData;
+	public static KrollDict lastestFiredGeofenceTransitionData;
 
  	/**
 	 * Pending Geofence Task
@@ -210,23 +220,20 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 		
 		data.put("event", event);
 		
+		localNotificationData = data;
     	if((boolean) fenceData.get("canNotify")){
-    		showLocalNotification(data);
+    		showLocalNotification();
     	}else{
     		Log.w(LCAT, "NOTIFICATIONS ARE DESISABLED FOR THIS FENCE!");
     	}
     	
-    	if (TiApplication.getAppCurrentActivity() != null && getModuleInstance() != null) {
-	 		KrollDict props = new KrollDict();
-	 		
-	 		props.put("fences", data);
-	 		
-	 		if (getModuleInstance().hasListeners(event)) {
-	 			getModuleInstance().fireEvent(event, props);
-	 		}
- 		}else{
- 			Log.w(LCAT, "CANNOT FIRE (ENTER, EXIT OR DWELL) EVENT IN BACKGROUND. APPLICATION IS NULL, BECAUSE IT IS CLOSED!");
- 		}
+ 		KrollDict props = new KrollDict();
+ 		
+ 		props.put("fences", data);
+ 		
+ 		lastestFiredGeofenceTransitionData = props;
+ 		
+ 		sendMessage(props, event);
  	}
 
     /**
@@ -275,6 +282,7 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
         Log.d(LCAT, "ATTEMPTING TO start service");
         
         Intent intent = new Intent(appContext, GeofenceBroadcastReceiver.class);
+        intent.putExtra("service_name", serviceName);
         // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
         // addGeofences() and removeGeofences().
         mGeofencePendingIntent = PendingIntent.getBroadcast(appContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -360,6 +368,10 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 		
 		Boolean successfullyAddedFecens = true;
 		
+		if(d.containsKey((Object)"service")){
+			serviceName = (String) d.getString("service");
+		}
+		
 		if (d.containsKey((Object)"cleanExistingFences")) {
 			boolean cf = (boolean) d.get("cleanExistingFences");
 			if(cf == true){
@@ -411,7 +423,7 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
     				}
     				
     				if(fence.containsKey("canNotify")){
-    					fenceData.put("canNotify", TiConvert.toDouble(fence.get("canNotify")));
+    					fenceData.put("canNotify", TiConvert.toBoolean(fence.get("canNotify")));
     				}else{
     					fenceData.put("canNotify", true);
     				}
@@ -563,6 +575,16 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 	    }
 	}
 	
+	@Kroll.method
+	public void fireNotification(){
+		showLocalNotification();
+	}
+	
+	@Kroll.method
+	public KrollDict getLastestFiredGeofenceTransitionData(){
+		return lastestFiredGeofenceTransitionData;
+	}
+	
 	@Kroll.constant
     public static final String ENTERED = Constants.GEOFENCES_ENTERED;
 	
@@ -625,6 +647,7 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 					data.put("prev_state", "stopped");
 					
 					Log.i(LCAT, "Sending message after checkForExtras() SUCCESS");
+					
 					GeofenceModule.sendMessage(data, GeofenceModule.NOTIFICATION_CLICKED);
 					
 					intent.removeExtra(PROPERTY_EXTRAS);
@@ -633,11 +656,11 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 		}
 	}
 	
-	public static void sendMessage(HashMap<String, Object> messageData, String notificationClicked) {
+	public static void sendMessage(HashMap<String, Object> messageData, String eventName) {
 		
 		GeofenceModule module = getModuleInstance();
 
-		if (module != null && module.hasListeners(NOTIFICATION_CLICKED)) {
+		if (module != null && module.hasListeners(eventName)) {
 			
 			HashMap<String, Serializable> data = new HashMap<String, Serializable>();
 			
@@ -645,28 +668,48 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 			data.put("success", true);
 			data.put("data", messageData);
 
-			module.fireEvent(NOTIFICATION_CLICKED, data);
+			module.fireEvent(eventName, data);
 			
-			Log.i(LCAT, "Firing NOTIFICATION_CLICKED event...");
+			Log.i(LCAT, "Firing " + eventName + " event...");
 			
 		}else{
-			Log.e(LCAT, "module is null or module.hasListeners(NOTIFICATION_CLICKED) does not exist");
+			Log.w(LCAT, "CANNOT FIRE EVENTS IN BACKGROUND. APPLICATION IS NULL, BECAUSE IT IS CLOSED!");
 		}
 	}
 	
-	@Kroll.method
-	public static void showLocalNotification(HashMap<String, Object> options) {
-		try {
-			JSONObject reader = new JSONObject(options);
-			Bundle newExtras = new Bundle();
-			for (int i = 0; i < reader.names().length(); i++) {
-				String key = reader.names().getString(i);
-				String value = reader.getString(key);
-				newExtras.putString(key, value);
+	public static void showLocalNotification() {
+		
+		if(localNotificationData != null){
+
+			HashMap<String, Object> options = localNotificationData;
+			
+			try {
+				JSONObject reader = new JSONObject(options);
+				Bundle newExtras = new Bundle();
+				for (int i = 0; i < reader.names().length(); i++) {
+					String key = reader.names().getString(i);
+					String value = reader.getString(key);
+					newExtras.putString(key, value);
+				}
+				GeofenceModule.sendNotification(newExtras);
+			} catch (JSONException e) {
+				Log.w(LCAT, "ERROR on sending notification!");
 			}
-			GeofenceModule.sendNotification(newExtras);
-		} catch (JSONException e) {
+		} else {
+			Log.w(LCAT, "localNotificationData is Null!");
 		}
+		
+		localNotificationData = null;
+	}
+	
+	@TargetApi(26)
+	private static NotificationChannel createOrUpdateDefaultNotificationChannel() {
+		TiApplication appContext = TiApplication.getInstance();
+		NotificationManager notificationManager = (NotificationManager)appContext.getSystemService(Context.NOTIFICATION_SERVICE);
+		String channelName = TiApplication.getInstance().getAppProperties().getString("pushclient.defaultChannel", DEFAULT_CHANNEL_NAME);
+		NotificationChannel channel = new NotificationChannel(DEFAULT_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_HIGH);
+		notificationManager.createNotificationChannel(channel);
+		return channel;
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -983,7 +1026,14 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 			launch.setAction("dummy_unique_action_identifyer:" + notificationId);
 
 			PendingIntent contentIntent = PendingIntent.getActivity(appContext, 0, launch, PendingIntent.FLAG_CANCEL_CURRENT);
-			NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(appContext);
+			NotificationCompat.Builder mBuilder = null;
+
+ 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+				mBuilder = new NotificationCompat.Builder(appContext, createOrUpdateDefaultNotificationChannel().getId());
+			}
+			else {
+				mBuilder = new NotificationCompat.Builder(appContext);
+			}
 
 			if(bigImage != null){
 				mBuilder.setStyle(new NotificationCompat.BigPictureStyle().bigPicture(bigImage));
