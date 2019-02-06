@@ -68,6 +68,7 @@ public class GeofenceTransitionsJobIntentService extends JobIntentService {
             // Get the transition details as a String.
             //String geofenceTransitionDetails = getGeofenceTransitionDetails(geofenceTransition, triggeringGeofences);
             ArrayList<Object> getGeofenceTransitionArray = getGeofenceTransitionArray(triggeringGeofences);
+            GeofenceModule.lastestFiredGeofenceTransitionData = getGeofenceTransitionArray;
             
             // Send notification and log the transition details.
             
@@ -80,6 +81,8 @@ public class GeofenceTransitionsJobIntentService extends JobIntentService {
 			if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL) {
 				eventName = Constants.GEOFENCES_DWELL;
 			}
+			
+			GeofenceModule.lastestFiredGeofenceTransitionEvent = eventName;
 			
 			Log.i(TAG, "Firing " + eventName + "...");
             GeofenceModule.fireProxyEvent(eventName, getGeofenceTransitionArray, getApplicationContext());

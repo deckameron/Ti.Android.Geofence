@@ -99,7 +99,8 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 	ObjectOutputStream objectOutputStream;
 	
 	public static HashMap<String, Object> localNotificationData;
-	public static KrollDict lastestFiredGeofenceTransitionData;
+	public static ArrayList<Object> lastestFiredGeofenceTransitionData;
+	public static String lastestFiredGeofenceTransitionEvent;
 
  	/**
 	 * Pending Geofence Task
@@ -220,20 +221,18 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 		
 		data.put("event", event);
 		
-		localNotificationData = data;
+ 		KrollDict props = new KrollDict();
+ 		
+ 		props.put("fences", data);
+ 		
+ 		sendMessage(props, event);
+ 		
+ 		localNotificationData = data;
     	if((boolean) fenceData.get("canNotify")){
     		showLocalNotification();
     	}else{
     		Log.w(LCAT, "NOTIFICATIONS ARE DESISABLED FOR THIS FENCE!");
     	}
-    	
- 		KrollDict props = new KrollDict();
- 		
- 		props.put("fences", data);
- 		
- 		lastestFiredGeofenceTransitionData = props;
- 		
- 		sendMessage(props, event);
  	}
 
     /**
@@ -582,7 +581,11 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 	
 	@Kroll.method
 	public KrollDict getLastestFiredGeofenceTransitionData(){
-		return lastestFiredGeofenceTransitionData;
+		KrollDict props = new KrollDict();
+		Object[] javascriptFencesArray = lastestFiredGeofenceTransitionData.toArray();
+ 		props.put("fences", javascriptFencesArray);
+ 		props.put("event", lastestFiredGeofenceTransitionEvent);
+		return props;
 	}
 	
 	@Kroll.constant

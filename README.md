@@ -179,27 +179,16 @@ Just stops the monitoring service for the current fences. It will NOT clear the 
 Returns the data from the latest fired event in *json* like this. 
 
 ```javascript
-{
-  "fences": {
-    "alert": "Just arrived at work. Let's rock!",
-    "licon": "http://framework.sparklogix.com/wp-content/uploads/2016/01/globe1.png",
-    "custom": [
-      {
-        "latitude": "28.41259",
-        "id": "huda_metro",
-        "longitude": "77.0425996"
-      }
-    ],
-    "bgac": "#E65100",
-    "sicon": "@drawable/ic_my_location_black_24dp",
-    "ledc": "#FF009688",
-    "canNotify": false,
-    "id": "huda_metro",
-    "title": "Office Address",
-    "event": "ENTERED",
-    "bicon": null
-  }
-}
+ {
+ 	"fences":[
+ 		{
+ 			"latitude":"28.41259",
+ 			"id":"huda_metro",
+ 			"longitude":"77.0425996"
+ 		}
+ 	],
+ 	"event":"ENTERED"
+ }
 ```
 ## fireNotification
 Fires a local notification with fence information if there is a Geofence transition waiting to be fired.
@@ -229,13 +218,14 @@ If you want to execute a javascript code whenever the ENTERED, EXIT or DWELL eve
 Ti.API.info('IT WORKED! It is a service');
 var geofence = require("ti.android.geofence");
 
-var geoTrigger = geofence.getLastestFiredGeofenceTransitionData().fences;
+var geoTriggers = geofence.getLastestFiredGeofenceTransitionData();
 
-Ti.API.info(JSON.stringify(geoTrigger));
-
-if(geoTrigger.id == "huda_metro" && geoTrigger.event == geofence.ENTERED){
-    geofence.fireNotification();
-}
+var gLength = geoTriggers.fences.length;
+for (var i=0; i < gLength; i++) {
+    if(geoTriggers.fences[i].id == "huda_metro" && geoTriggers.event == geofence.ENTERED){
+        geofence.fireNotification();
+    }
+};
 ```
 
 #### 2 ) Add the tag services to you android tag on tiapp.xml, like below:
