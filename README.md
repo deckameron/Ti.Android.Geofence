@@ -194,7 +194,7 @@ These events can only be monitored when your app is in foreground or in backgrou
 
 If you want to execute a javascript code whenever the ENTERED, EXIT or DWELL events get fired. This is how:
 
-#### 1 ) Create a file name myService.js and right your backgroundService code.
+#### 1 ) Create a file name myService.js and right your backgroundService code. Place it in Resources folder.
 ```javascript
 //THIS IS JUST AN EXAMPLE
 Ti.API.info('IT WORKED! It is a service');
