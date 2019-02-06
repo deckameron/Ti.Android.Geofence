@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ti:app xmlns:ti="http://ti.appcelerator.org">
+    <id>com.douglas.androidtest</id>
+    <name>Android Test</name>
+    <version>1.0</version>
+    <publisher>sandrobarnabe</publisher>
+    <url>http://www.test.com</url>
+    <description>undefined
+</description>
+    <copyright>2016 by sandrobarnabe</copyright>
+    <icon>appicon.png</icon>
+    <fullscreen>false</fullscreen>
+    <navbar-hidden>false</navbar-hidden>
+    <analytics>true</analytics>
+    <guid>61746c41-ede3-4661-9aaa-7c2f097109fe</guid>
+    <property name="run-on-main-thread" type="bool">true</property>
+    <property name="ti.ui.defaultunit" type="string">dp</property>
+    <ios>
+        <plist>
+            <dict>
+                <key>UISupportedInterfaceOrientations~iphone</key>
+                <array>
+                    <string>UIInterfaceOrientationPortrait</string>
+                </array>
+                <key>UISupportedInterfaceOrientations~ipad</key>
+                <array>
+                    <string>UIInterfaceOrientationPortrait</string>
+                    <string>UIInterfaceOrientationPortraitUpsideDown</string>
+                    <string>UIInterfaceOrientationLandscapeLeft</string>
+                    <string>UIInterfaceOrientationLandscapeRight</string>
+                </array>
+                <key>UIRequiresPersistentWiFi</key>
+                <false/>
+                <key>UIPrerenderedIcon</key>
+                <false/>
+                <key>UIStatusBarHidden</key>
+                <false/>
+                <key>UIStatusBarStyle</key>
+                <string>UIStatusBarStyleDefault</string>
+            </dict>
+        </plist>
+    </ios>
+    <android xmlns:android="http://schemas.android.com/apk/res/android">
+        <services>
+            <service type="interval" url="LocationService.js"/>
+        </services>
+        <abi>armeabi-v7a,x86</abi>
+        <manifest android:installLocation="auto" android:versionCode="1"
+            android:versionName="1.0" package="com.douglas.androidtest" xmlns:android="http://schemas.android.com/apk/res/android">
+            <uses-sdk android:minSdkVersion="14" android:targetSdkVersion="25"/>
+            <uses-sdk>17</uses-sdk>
+            <uses-permission android:name="android.permission.INTERNET"/>
+            <uses-permission
+                android:name="android.permission.ACCESS_NETWORK_STATE"/>,
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+            <supports-screens android:anyDensity="true"
+                android:largeScreens="true" android:normalScreens="true"
+                android:resizeable="true" android:smallScreens="true" android:xlargeScreens="false"/>
+            <application android:screenOrientation="portrait">
+                <activity
+                    android:configChanges="keyboardHidden|orientation"
+                    android:name="org.appcelerator.titanium.TiActivity"
+                    android:screenOrientation="portrait" android:windowSoftInputMode="stateHidden|adjustResize">
+                    <intent-filter>
+                        <action android:name="android.intent.action.MAIN"/>
+                        <category android:name="android.intent.category.LAUNCHER"/>
+                    </intent-filter>
+                </activity>
+            </application>
+            <application>
+                <meta-data
+                    android:name="com.google.android.maps.v2.API_KEY" android:value="AIzaSyDzUkwE5_MKwjRsbiJNcYonybsv-BfoZy4"/>
+            </application>
+        </manifest>
+    </android>
+    <modules>
+        <module platform="android">ti.android.geofence</module>
+    </modules>
+    <deployment-targets>
+        <target device="android">true</target>
+        <target device="ipad">false</target>
+        <target device="iphone">false</target>
+        <target device="windows">false</target>
+    </deployment-targets>
+    <sdk-version>7.4.1.GA</sdk-version>
+    <property name="appc-app-id" type="string">56b073af4aed8e081c8f06cd</property>
+</ti:app>

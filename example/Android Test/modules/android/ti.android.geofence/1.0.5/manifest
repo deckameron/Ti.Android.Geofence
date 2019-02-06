@@ -1,0 +1,18 @@
+#
+# this is your module manifest and used by Titanium
+# during compilation, packaging, distribution, etc.
+#
+version: 1.0.5
+apiversion: 4
+architectures: arm64-v8a armeabi-v7a x86
+description: Android Geofence Module for Appcelerator Titanium SDK 7+
+author: Douglas Alves
+license: MIT
+copyright: Copyright (c) 2018 by Douglas Alves
+
+# these should not be edited
+name: geofence
+moduleid: ti.android.geofence
+guid: 29d5116f-b548-4e7f-982f-1dcc51fd0da8
+platform: android
+minsdk: 7.0.0.GA
