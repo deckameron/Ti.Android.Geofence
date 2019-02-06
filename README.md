@@ -169,12 +169,38 @@ This method will check your geofences and start monitoring for the transitions y
 
 ## clearExistingFences
 
-This method will clear all existing fences already being monitored. It will also stop the monitoring service.
+Clears all existing fences already being monitored. **It will also stop the monitoring service**.
 
 ## stopMonitoring
 
-This method will just stop the monitoring service for the current fences. It will NOT clear the existing fences already being monitored.
+Just stops the monitoring service for the current fences. It will NOT clear the existing fences already being monitored.
 
+## getLastestFiredGeofenceTransitionData
+Returns the data from the latest fired event in *json* like this. 
+
+```javascript
+{
+  "fences": {
+    "alert": "Just arrived at work. Let's rock!",
+    "licon": "http://framework.sparklogix.com/wp-content/uploads/2016/01/globe1.png",
+    "custom": [
+      {
+        "latitude": "28.41259",
+        "id": "huda_metro",
+        "longitude": "77.0425996"
+      }
+    ],
+    "bgac": "#E65100",
+    "sicon": "@drawable/ic_my_location_black_24dp",
+    "ledc": "#FF009688",
+    "canNotify": false,
+    "id": "huda_metro",
+    "title": "Office Address",
+    "event": "ENTERED",
+    "bicon": null
+  }
+}
+```
 # Events
 
 These events can only be monitored when your app is in foreground or in background. They will never fire when your app is closed because the instance of your application does not exist.
@@ -196,11 +222,16 @@ If you want to execute a javascript code whenever the ENTERED, EXIT or DWELL eve
 
 #### 1 ) Create a file name myService.js and right your backgroundService code. Place it in Resources folder.
 ```javascript
-//THIS IS JUST AN EXAMPLE
+//EXAMPLE
 Ti.API.info('IT WORKED! It is a service');
 var geofence = require("ti.android.geofence");
-if(geofence.getLastestFiredGeofenceTransitionEvent() == geofence.ENTERED){
-	geofence.fireNotification();
+
+var geoTrigger = geofence.getLastestFiredGeofenceTransitionData().fences;
+
+Ti.API.info(JSON.stringify(geoTrigger));
+
+if(geoTrigger.id == "huda_metro" && geoTrigger.event == geofence.ENTERED){
+    geofence.fireNotification();
 }
 ```
 
