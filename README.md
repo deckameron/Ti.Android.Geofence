@@ -201,6 +201,9 @@ Returns the data from the latest fired event in *json* like this.
   }
 }
 ```
+## fireNotification
+Fires a local notification with fence information if there is a Geofence transition waiting to be fired.
+
 # Events
 
 These events can only be monitored when your app is in foreground or in background. They will never fire when your app is closed because the instance of your application does not exist.
