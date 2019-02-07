@@ -67,10 +67,6 @@
                     </intent-filter>
                 </activity>
             </application>
-            <application>
-                <meta-data
-                    android:name="com.google.android.maps.v2.API_KEY" android:value="AIzaSyDzUkwE5_MKwjRsbiJNcYonybsv-BfoZy4"/>
-            </application>
         </manifest>
     </android>
     <modules>
