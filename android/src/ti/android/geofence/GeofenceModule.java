@@ -580,13 +580,18 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 	}
 	
 	@Kroll.method
-	public KrollDict getLastestFiredGeofenceTransitionData(){
-		KrollDict props = new KrollDict();
-		Object[] javascriptFencesArray = lastestFiredGeofenceTransitionData.toArray();
- 		props.put("fences", javascriptFencesArray);
- 		props.put("event", lastestFiredGeofenceTransitionEvent);
-		return props;
-	}
+    public KrollDict getLastestFiredGeofenceTransitionData(){
+        
+        KrollDict props = new KrollDict();
+        
+        if(lastestFiredGeofenceTransitionData != null){
+            Object[] javascriptFencesArray = lastestFiredGeofenceTransitionData.toArray();
+            props.put("fences", javascriptFencesArray);
+        }
+        
+        props.put("event", lastestFiredGeofenceTransitionEvent);
+        return props;
+    }
 	
 	@Kroll.constant
     public static final String ENTERED = Constants.GEOFENCES_ENTERED;

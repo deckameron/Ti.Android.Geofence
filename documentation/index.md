@@ -196,11 +196,15 @@ var geofence = require("ti.android.geofence");
 
 var geoTriggers = geofence.getLastestFiredGeofenceTransitionData();
 
-var gLength = geoTriggers.fences.length;
-for (var i=0; i < gLength; i++) {
-    if(geoTriggers.fences[i].id == "huda_metro" && geoTriggers.event == geofence.ENTERED){
-        geofence.fireNotification();
-    }
+if(geoTriggers.fences) {
+    var gLength = geoTriggers.fences.length;
+    for (var i=0; i < gLength; i++) {
+        if(geoTriggers.fences[i].id == "huda_metro" && geoTriggers.event == geofence.ENTERED){
+            geofence.fireNotification();
+        }
+    };
+} else {
+    Titanium.API.warn("No fences for this event!");
 };
 ```
 
