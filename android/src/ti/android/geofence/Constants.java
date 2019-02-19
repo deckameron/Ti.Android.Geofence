@@ -17,7 +17,8 @@ final class Constants {
 	static final String STOPPED_MONITORING = "STOPPED_MONITORING";
 	static final String GEOFENCES_ADDED = "GEOFENCES_ADDED";
 	static final String NOTIFICATION_CLICKED = "NOTIFICATION_CLICKED";
-	static final String NOTIFIED = "NOTIFIED";
+	static final String NOTIFICATION_FIRED_IN_FOREGROUND = "NOTIFICATION_FIRED_IN_FOREGROUND";
+	static final String NOTIFICATION_FIRED_IN_BACKGROUND = "NOTIFICATION_FIRED_IN_BACKGROUND";
 	static final String TYPE_MASTER_ZONE = "1";
 	static final String TYPE_PLACE_FENCE = "2";
 

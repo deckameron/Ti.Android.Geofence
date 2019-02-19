@@ -21,6 +21,7 @@ import java.util.Map.Entry;
 
 import org.appcelerator.kroll.KrollDict;
 import org.appcelerator.kroll.KrollModule;
+import org.appcelerator.kroll.KrollRuntime;
 import org.appcelerator.kroll.annotations.Kroll;
 import org.appcelerator.titanium.TiApplication;
 import org.appcelerator.titanium.io.TiBaseFile;
@@ -159,9 +160,17 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 	@Override
     public void onStart(Activity activity) {
 		Log.i(LCAT, "onStart");
+		appContext.startForegroundService(TiApplication.getAppRootOrCurrentActivity().getIntent()); //????????
+    }
+	
+	@Override
+	public void onResume(Activity activity) {
+		super.onResume(activity);
+		Log.i(LCAT, "onResume");
+		
 		//If the app is opening from a user clicking on a notification
 		checkForExtras();
-    }
+	}
 	
     /**
      * Builds and returns a GeofencingRequest. Specifies the list of geofences to be monitored.
@@ -203,19 +212,25 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 	    
 	    HashMap fenceData = (HashMap) fencesHashMap.get(fenceId);
 	    
-	    //CanNotify
-	    data.put("canNotify", fenceData.get("canNotify"));
-		//Strings
 	    data.put("id", fenceId);
-		data.put("title", fenceData.get("title"));
-		data.put("alert", fenceData.get("message"));
-		//Colors
-		data.put("ledc", fenceData.get("ledc"));
-		data.put("bgac", fenceData.get("bgac"));
-		//Icons
-		data.put("sicon", fenceData.get("sicon"));
-		data.put("licon", fenceData.get("licon"));
-		data.put("bicon", fenceData.get("bicon"));
+	    
+	    boolean canNotify = false;
+	    
+	    if(fenceData != null){
+		    //CanNotify
+	    	canNotify = (boolean) fenceData.get("canNotify");
+		    data.put("canNotify", canNotify);
+			//Strings
+			data.put("title", fenceData.get("title"));
+			data.put("alert", fenceData.get("message"));
+			//Colors
+			data.put("ledc", fenceData.get("ledc"));
+			data.put("bgac", fenceData.get("bgac"));
+			//Icons
+			data.put("sicon", fenceData.get("sicon"));
+			data.put("licon", fenceData.get("licon"));
+			data.put("bicon", fenceData.get("bicon"));
+	    }
 		//Custom Data
 		data.put("custom", javascriptFencesArray);
 		
@@ -228,7 +243,7 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
  		sendMessage(props, event);
  		
  		localNotificationData = data;
-    	if((boolean) fenceData.get("canNotify")){
+    	if(canNotify){
     		showLocalNotification();
     	}else{
     		Log.w(LCAT, "NOTIFICATIONS ARE DESISABLED FOR THIS FENCE!");
@@ -250,10 +265,10 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
         	KrollDict props = new KrollDict();
         	
             if(mPendingGeofenceTask == PendingGeofenceTask.ADD){
-                getModuleInstance().fireEvent(Constants.STARTED_MONITORING, props);
+                getModuleInstance().fireEvent(STARTED_MONITORING, props);
                 mMonitoring = Monitoring.ON;
             }else if(mPendingGeofenceTask == PendingGeofenceTask.REMOVE){
-                getModuleInstance().fireEvent(Constants.STOPPED_MONITORING, props);
+                getModuleInstance().fireEvent(STOPPED_MONITORING, props);
                 mMonitoring = Monitoring.OFF;
             }
         } else {
@@ -580,18 +595,18 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 	}
 	
 	@Kroll.method
-    public KrollDict getLastestFiredGeofenceTransitionData(){
-        
-        KrollDict props = new KrollDict();
-        
-        if(lastestFiredGeofenceTransitionData != null){
-            Object[] javascriptFencesArray = lastestFiredGeofenceTransitionData.toArray();
-            props.put("fences", javascriptFencesArray);
-        }
-        
-        props.put("event", lastestFiredGeofenceTransitionEvent);
-        return props;
-    }
+	public KrollDict getLastestFiredGeofenceTransitionData(){
+		
+		KrollDict props = new KrollDict();
+		
+		if(lastestFiredGeofenceTransitionData != null){
+			Object[] javascriptFencesArray = lastestFiredGeofenceTransitionData.toArray();
+			props.put("fences", javascriptFencesArray);
+		}
+ 		
+ 		props.put("event", lastestFiredGeofenceTransitionEvent);
+		return props;
+	}
 	
 	@Kroll.constant
     public static final String ENTERED = Constants.GEOFENCES_ENTERED;
@@ -618,7 +633,10 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
     public static final String NOTIFICATION_CLICKED = Constants.NOTIFICATION_CLICKED;
 	
 	@Kroll.constant
-    public static final String NOTIFIED = Constants.NOTIFIED;
+    public static final String NOTIFICATION_FIRED_IN_FOREGROUND = Constants.NOTIFICATION_FIRED_IN_FOREGROUND;
+	
+	@Kroll.constant
+    public static final String NOTIFICATION_FIRED_IN_BACKGROUND = Constants.NOTIFICATION_FIRED_IN_BACKGROUND;
 	
 	@Kroll.constant
     public static final String TYPE_MASTER_ZONE = Constants.TYPE_MASTER_ZONE;
@@ -647,41 +665,37 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 			if (intent != null) {
 				Bundle extras = intent.getExtras();
 				if (extras != null && !extras.isEmpty() && extras.containsKey(PROPERTY_EXTRAS)) {
-					
 					extras = extras.getBundle(PROPERTY_EXTRAS);
-					
 					HashMap<String, Object> data = GeofenceModule.convertBundleToHashMap(extras);
-					
 					data.put("prev_state", "stopped");
-					
 					Log.i(LCAT, "Sending message after checkForExtras() SUCCESS");
-					
 					GeofenceModule.sendMessage(data, GeofenceModule.NOTIFICATION_CLICKED);
-					
 					intent.removeExtra(PROPERTY_EXTRAS);
+				} else {
+					Log.i(LCAT, "checkForExtras : extras is null");
 				}
+			} else {
+				Log.i(LCAT, "checkForExtras : intent is null");
 			}
+		} else {
+			Log.i(LCAT, "checkForExtras : activity is null");
 		}
 	}
 	
 	public static void sendMessage(HashMap<String, Object> messageData, String eventName) {
 		
 		GeofenceModule module = getModuleInstance();
-
+		
 		if (module != null && module.hasListeners(eventName)) {
-			
 			HashMap<String, Serializable> data = new HashMap<String, Serializable>();
 			
 			data.put("code", 0);
 			data.put("success", true);
 			data.put("data", messageData);
-
+		
 			module.fireEvent(eventName, data);
 			
 			Log.i(LCAT, "Firing " + eventName + " event...");
-			
-		}else{
-			Log.w(LCAT, "CANNOT FIRE EVENTS IN BACKGROUND. APPLICATION IS NULL, BECAUSE IT IS CLOSED!");
 		}
 	}
 	
@@ -700,6 +714,15 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 					newExtras.putString(key, value);
 				}
 				GeofenceModule.sendNotification(newExtras);
+				
+				if (TiApplication.isCurrentActivityInForeground()) {
+					GeofenceModule.sendMessage(localNotificationData, GeofenceModule.NOTIFICATION_FIRED_IN_FOREGROUND);
+				} else {
+					if (KrollRuntime.getInstance().getRuntimeState() != KrollRuntime.State.DISPOSED) {
+						GeofenceModule.sendMessage(localNotificationData, GeofenceModule.NOTIFICATION_FIRED_IN_BACKGROUND);
+					}
+				}
+				
 			} catch (JSONException e) {
 				Log.w(LCAT, "ERROR on sending notification!");
 			}
@@ -1025,8 +1048,8 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 		}
 
 		if (notificationText != null) {
-			Intent launch = getLauncherIntent(extras);
-			//Intent launch = new Intent(appContext, PendingNotificationActivity.class);
+			//Intent launch = getLauncherIntent(extras);
+			Intent launch = new Intent(appContext, PendingNotificationActivity.class);
 			launch.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
 			if (extrasRoot != null && !extrasRoot.isEmpty()) {
 				launch.putExtra(PROPERTY_EXTRAS, extrasRoot);
@@ -1305,7 +1328,7 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 	
 	public static boolean hasCallbackListeners() {
 		GeofenceModule module = getModuleInstance();
-		return (module != null && module.hasListeners(NOTIFIED));
+		return (module != null && module.hasListeners(NOTIFICATION_FIRED_IN_FOREGROUND));
 	}
 	
 	public static HashMap<String, Object> convertBundleToHashMap(Bundle resource) {
