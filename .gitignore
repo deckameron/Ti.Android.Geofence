@@ -1,1 +1,9 @@
+*bin/
 *build/
+*.project*build/
+*.project
+build
+build.log
+tmp
+._*
+.DS_Store
