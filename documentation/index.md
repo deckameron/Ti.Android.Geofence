@@ -232,7 +232,7 @@ To learn more about Android Services please read the documentation [here](https:
 geofence.addGeofences({
 	clearExistingFences : false,
 	fences : ["YOUR_FENCES"],
-	service : "com.myproject.geofence.myServiveService" //THIS IS IT!
+	service : "com.myproject.geofence.MyServiceService" //THIS IS IT!
 });
 ```
 
