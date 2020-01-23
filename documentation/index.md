@@ -224,7 +224,7 @@ if(geoTriggers.fences) {
 
 #### 3) Compile the project
 
-Before moving on and start using your service you will need to re-compile your project. After recompiling your project, open your "YOUR_PROJECT_FOLDER"/build/android/AndroidManifest.xml. Look for your service name and you will find its full name, something like _"com.myproject.geofence.myServiveService"_. This is important as Titanium generates this name.
+Before moving on and start using your service you will need to re-compile your project. After recompiling your project, open your "YOUR_PROJECT_FOLDER"/build/android/AndroidManifest.xml. Look for your service name and you will find its full name, something like _"com.myproject.geofence.MyServiceService"_. This is important as Titanium generates this name.
 To learn more about Android Services please read the documentation [here](https://docs.appcelerator.com/platform/latest/#!/guide/Android_Services).
 
 #### 4) Add the service key to addGeofences method 
@@ -248,7 +248,7 @@ You can extract them from [Ti.PlayServices](https://github.com/appcelerator-modu
 #### google-play-services-base.jar
 
 ### Android Support
-These can be found at "/Library/Application Support/Titanium/mobilesdk/osx/7.0.0.GA/android"
+These can be found at "/Library/Application Support/Titanium/mobilesdk/osx/8.0.0.GA/android"
 
 #### android-support-v7-appcompat.jar
 #### android-support-design.jar

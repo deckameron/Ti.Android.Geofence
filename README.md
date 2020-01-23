@@ -11,7 +11,7 @@ It can monitor all geofence transitions and fire a local notification as well. Y
 **This module works when the app is in foreground, background, closed, after phone restart, App data cleared and if location providers get changed.**
 
 #### Titanium SDK
-Will work only with **7+**
+Will work only with **8+**
 
 ### Download
 

@@ -5,8 +5,6 @@ import org.appcelerator.titanium.TiApplication;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningServiceInfo;
 import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -24,25 +22,40 @@ public class JavascriptService extends JobIntentService {
         enqueueWork(context, JavascriptService.class, JOB_ID, intent);
     }
     
+    @SuppressWarnings("deprecation")
 	@Override
-	public void onCreate() {
-		super.onCreate();
+    public int onStartCommand(Intent intent, int flags, int startId) {
+    	
+    	String ANDROID_CHANNEL_ID = "my_channel_01";
+    	
+    	String appName = getApplicationContext().getApplicationInfo().loadLabel(getPackageManager()).toString();
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-		if (Build.VERSION.SDK_INT >= 26) {
-			String CHANNEL_ID = "my_channel_01";
-			NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Channel human readable title",
-					NotificationManager.IMPORTANCE_DEFAULT);
+            Notification.Builder builder = new Notification.Builder(this, ANDROID_CHANNEL_ID)
+                    .setContentTitle(appName)
+                    .setContentText("Processing...")
+                    .setAutoCancel(true);
 
-			((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).createNotificationChannel(channel);
-			
-			String appName = getApplicationContext().getApplicationInfo().loadLabel(getPackageManager()).toString();
+            Notification notification = builder.build();
+            
+            startForeground(1, notification);
 
-			Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID).setContentTitle(appName)
-					.setContentText("Processing...").build();
+        } else {
 
-			startForeground(1, notification);
-		}
-	}
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+                    .setContentTitle(appName)
+                    .setContentText("Processing...")
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setAutoCancel(true);
+
+            Notification notification = builder.build();
+
+            startForeground(1, notification);
+        }
+        
+        return START_NOT_STICKY;
+    }
 	
 	@Override
 	protected void onHandleWork(Intent intent) {
