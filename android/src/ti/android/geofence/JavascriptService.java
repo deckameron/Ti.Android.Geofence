@@ -22,27 +22,29 @@ public class JavascriptService extends JobIntentService {
         enqueueWork(context, JavascriptService.class, JOB_ID, intent);
     }
     
-    @SuppressWarnings("deprecation")
+	@SuppressWarnings("deprecation")
 	@Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-    	
-    	String ANDROID_CHANNEL_ID = "my_channel_01";
+	public void onCreate() {
+		super.onCreate();
+		
+		Log.i(TAG, "onCreate");
+
+		String ANDROID_CHANNEL_ID = "my_channel_01";
     	
     	String appName = getApplicationContext().getApplicationInfo().loadLabel(getPackageManager()).toString();
         
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-
+        	Log.i(TAG, "Android O or newer");
             Notification.Builder builder = new Notification.Builder(this, ANDROID_CHANNEL_ID)
                     .setContentTitle(appName)
                     .setContentText("Processing...")
                     .setAutoCancel(true);
 
             Notification notification = builder.build();
-            
             startForeground(1, notification);
 
         } else {
-
+        	Log.i(TAG, "Old Android");
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
                     .setContentTitle(appName)
                     .setContentText("Processing...")
@@ -50,12 +52,9 @@ public class JavascriptService extends JobIntentService {
                     .setAutoCancel(true);
 
             Notification notification = builder.build();
-
             startForeground(1, notification);
         }
-        
-        return START_NOT_STICKY;
-    }
+	}
 	
 	@Override
 	protected void onHandleWork(Intent intent) {
