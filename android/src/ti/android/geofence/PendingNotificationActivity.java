@@ -8,10 +8,12 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
-public class PendingNotificationActivity extends Activity {
+public class PendingNotificationActivity extends Activity
+{
 
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
+	protected void onCreate(Bundle savedInstanceState)
+	{
 		super.onCreate(savedInstanceState);
 
 		Intent intent = getIntent();
@@ -19,7 +21,8 @@ public class PendingNotificationActivity extends Activity {
 		if (extras != null && !extras.isEmpty() && extras.containsKey(GeofenceModule.PROPERTY_EXTRAS)) {
 			extras = extras.getBundle(GeofenceModule.PROPERTY_EXTRAS);
 
-			if (GeofenceModule.hasCallbackListeners() && KrollRuntime.getInstance().getRuntimeState() != KrollRuntime.State.DISPOSED) {
+			if (GeofenceModule.hasCallbackListeners()
+				&& KrollRuntime.getInstance().getRuntimeState() != KrollRuntime.State.DISPOSED) {
 				// Fire notification received delegate
 				HashMap<String, Object> data = GeofenceModule.convertBundleToHashMap(extras);
 				data.put("prev_state", "background");

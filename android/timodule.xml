@@ -21,7 +21,7 @@
 				<meta-data
 				android:name="com.google.android.gms.version"
 				android:value="@integer/google_play_services_version" />
-				
+
 				<receiver
     				android:name="ti.android.geofence.GeofenceBroadcastReceiver"
     				android:enabled="true"
@@ -30,7 +30,7 @@
                         <action android:name="com.aol.android.geofence.ACTION_RECEIVE_GEOFENCE"/>
                     </intent-filter>
                 </receiver>
-                
+
                 <receiver
                     android:name="ti.android.geofence.OnRebootBroadcastReceiver"
                     android:enabled="true"
@@ -43,23 +43,23 @@
                         <category android:name="android.intent.category.DEFAULT" />
                     </intent-filter>
                 </receiver>
-                
+
                 <service
 					android:name="ti.android.geofence.JavascriptService"
 					android:exported="true"
 					android:permission="android.permission.BIND_JOB_SERVICE" />
-                
+
 				<service
 					android:name="ti.android.geofence.GeofenceTransitionsJobIntentService"
 					android:exported="true"
 					android:permission="android.permission.BIND_JOB_SERVICE" />
-					
+
 				<activity android:name="ti.android.geofence.PendingNotificationActivity" android:launchMode="singleTask" android:taskAffinity="" android:excludeFromRecents="true" />
 
 			</application>
 		</manifest>
 	</android>
 	<modules>
-		<module platform="android">ti.playservices</module>
+		<module platform="android" version="16.1.4">ti.playservices</module>
 	</modules>
 </ti:module>

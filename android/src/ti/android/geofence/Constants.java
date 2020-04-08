@@ -1,8 +1,10 @@
 package ti.android.geofence;
 
-final class Constants {
+final class Constants
+{
 
-	private Constants() {
+	private Constants()
+	{
 	}
 
 	private static final String PACKAGE_NAME = "ti.android.geofence";
