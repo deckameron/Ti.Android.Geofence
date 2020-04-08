@@ -23,21 +23,23 @@ import org.appcelerator.kroll.KrollDict;
 import org.appcelerator.kroll.KrollModule;
 import org.appcelerator.kroll.KrollRuntime;
 import org.appcelerator.kroll.annotations.Kroll;
+import org.appcelerator.kroll.common.Log;
 import org.appcelerator.titanium.TiApplication;
 import org.appcelerator.titanium.io.TiBaseFile;
 import org.appcelerator.titanium.io.TiFileFactory;
 import org.appcelerator.titanium.util.TiColorHelper;
 import org.appcelerator.titanium.util.TiConvert;
 import org.appcelerator.titanium.util.TiUIHelper;
-import org.appcelerator.kroll.common.Log;
+import org.json.JSONException;
+import org.json.JSONObject;
 
+import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -45,15 +47,12 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.os.Bundle;
 import android.os.Build;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingClient;
@@ -64,50 +63,46 @@ import com.google.android.gms.tasks.Task;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-
 @Kroll.module(name = "Geofence", id = "ti.android.geofence")
-public class GeofenceModule extends KrollModule implements OnCompleteListener<Void>{
+public class GeofenceModule extends KrollModule implements OnCompleteListener<Void>
+{
 
 	// Standard Debugging variables
 	private static final String LCAT = "GeofenceModule";
 	private static final String PROPERTY_PREFIX = GeofenceModule.class.getName();
 	private static final String ModuleName = "Geofence";
-	
+
 	private static String serviceName;
 
-	private static HashMap< String, HashMap< String, Object>> FENCES = new HashMap<String, HashMap<String, Object>>();
-	
-	private enum Monitoring {
-        ON, OFF
-    }
-	
+	private static HashMap<String, HashMap<String, Object>> FENCES = new HashMap<String, HashMap<String, Object>>();
+
+	private enum Monitoring { ON, OFF }
+
 	private Monitoring mMonitoring = Monitoring.OFF;
-	
-    private enum PendingGeofenceTask {
-        ADD, REMOVE, NONE
-    }
-    
-    /**
+
+	private enum PendingGeofenceTask { ADD, REMOVE, NONE }
+
+	/**
 	 * Notification Related
 	 */
- 	public static final String PROPERTY_REG_ID = PROPERTY_PREFIX + ".registrationId";
- 	public static final String PROPERTY_NOTIFICATION_ID = PROPERTY_PREFIX + ".notificationId";
- 	public static final String PROPERTY_EXTRAS = PROPERTY_PREFIX + ".extras";
- 	public static final String DEFAULT_CHANNEL_ID = "ti.android.geofence.defaultchannel";
+	public static final String PROPERTY_REG_ID = PROPERTY_PREFIX + ".registrationId";
+	public static final String PROPERTY_NOTIFICATION_ID = PROPERTY_PREFIX + ".notificationId";
+	public static final String PROPERTY_EXTRAS = PROPERTY_PREFIX + ".extras";
+	public static final String DEFAULT_CHANNEL_ID = "ti.android.geofence.defaultchannel";
 	public static final String DEFAULT_CHANNEL_NAME = "Push Notifications";
- 	
- 	FileOutputStream fileOutputStream;
+
+	FileOutputStream fileOutputStream;
 	ObjectOutputStream objectOutputStream;
-	
+
 	public static HashMap<String, Object> localNotificationData;
 	public static ArrayList<Object> lastestFiredGeofenceTransitionData;
 	public static String lastestFiredGeofenceTransitionEvent;
 
- 	/**
+	/**
 	 * Pending Geofence Task
 	 */
-    private PendingGeofenceTask mPendingGeofenceTask = PendingGeofenceTask.NONE;
-	
+	private PendingGeofenceTask mPendingGeofenceTask = PendingGeofenceTask.NONE;
+
 	/**
 	 * Provides access to the Geofencing API.
 	 */
@@ -125,24 +120,24 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 
 	// You can define constants with @Kroll.constant, for example:
 	// @Kroll.constant public static final String EXTERNAL_NAME = value;
-	
+
 	static TiApplication appContext = TiApplication.getInstance();
 
-	public GeofenceModule() {
+	public GeofenceModule()
+	{
 		super(ModuleName);
 	}
-	
+
 	public static GeofenceModule getModuleInstance()
 	{
 		TiApplication appContext = TiApplication.getInstance();
 		GeofenceModule module = (GeofenceModule) appContext.getModuleByName(ModuleName);
 		return module;
 	}
-	
+
 	@Kroll.onAppCreate
-	public static void onAppCreate(TiApplication app) {
-		Log.i(LCAT, "inside onAppCreate");
-		
+	public static void onAppCreate(TiApplication app)
+	{
 		// put module init code that needs to run when the application is
 		// created
 		mGeofenceList = new ArrayList<Geofence>();
@@ -150,76 +145,75 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 		// Initially set the PendingIntent used in addGeofences() and
 		// removeGeofences() to null.
 		mGeofencePendingIntent = null;
-		
+
 		// Get the geofences used. Geofence data is hard coded in this sample.
 		//populateGeofenceList();
 
 		mGeofencingClient = LocationServices.getGeofencingClient(appContext);
 	}
-	
+
 	@Override
-    public void onStart(Activity activity) {
-		Log.i(LCAT, "onStart");
+	public void onStart(Activity activity)
+	{
 		appContext.startForegroundService(TiApplication.getAppRootOrCurrentActivity().getIntent()); //????????
-    }
-	
+	}
+
 	@Override
-	public void onResume(Activity activity) {
+	public void onResume(Activity activity)
+	{
 		super.onResume(activity);
-		Log.i(LCAT, "onResume");
-		
+
 		//If the app is opening from a user clicking on a notification
 		checkForExtras();
 	}
-	
-    /**
+
+	/**
      * Builds and returns a GeofencingRequest. Specifies the list of geofences to be monitored.
      * Also specifies how the geofence notifications are initially triggered.
      */
-    private static GeofencingRequest getGeofencingRequest() {
-    	
-    	Log.d(LCAT, "getGeofencingRequest..");
-    	
-        GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
+	private static GeofencingRequest getGeofencingRequest()
+	{
+		GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
 
-        // The INITIAL_TRIGGER_ENTER flag indicates that geofencing service should trigger a
-        // GEOFENCE_TRANSITION_ENTER notification when the geofence is added and if the device
-        // is already inside that geofence.
-        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
+		// The INITIAL_TRIGGER_ENTER flag indicates that geofencing service should trigger a
+		// GEOFENCE_TRANSITION_ENTER notification when the geofence is added and if the device
+		// is already inside that geofence.
+		builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
 
-        // Add the geofences to be monitored by geofencing service.
-        builder.addGeofences(mGeofenceList);
+		// Add the geofences to be monitored by geofencing service.
+		builder.addGeofences(mGeofenceList);
 
-        // Return a GeofencingRequest.
-        return builder.build();
-    }
-    
-    @SuppressWarnings({ "unchecked", "rawtypes" })
- 	public static void fireProxyEvent(String event, ArrayList<Object> getGeofenceTransitionArray, Context cx){
-    	
-    	HashMap data = new HashMap<>();
-    	
-    	Object[] javascriptFencesArray = getGeofenceTransitionArray.toArray();
-    	
-    	String fenceId = (String)((HashMap<String, Object>) javascriptFencesArray[0]).get("id");
-    	
-    	//get from shared prefs
-    	Gson gson = new Gson();
-    	SharedPreferences prefs = cx.getSharedPreferences("fences", Context.MODE_PRIVATE);
-	    String storedHashMapString = prefs.getString("fencesHashString", "oopsDintWork");
-	    java.lang.reflect.Type type = new TypeToken<HashMap<String, HashMap<String, Object>>>(){}.getType();
-	    HashMap<String, Object> fencesHashMap = gson.fromJson(storedHashMapString, type);
-	    
-	    HashMap fenceData = (HashMap) fencesHashMap.get(fenceId);
-	    
-	    data.put("id", fenceId);
-	    
-	    boolean canNotify = false;
-	    
-	    if(fenceData != null){
-		    //CanNotify
-	    	canNotify = (boolean) fenceData.get("canNotify");
-		    data.put("canNotify", canNotify);
+		// Return a GeofencingRequest.
+		return builder.build();
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static void fireProxyEvent(String event, ArrayList<Object> getGeofenceTransitionArray, Context cx)
+	{
+
+		HashMap data = new HashMap<>();
+
+		Object[] javascriptFencesArray = getGeofenceTransitionArray.toArray();
+
+		String fenceId = (String) ((HashMap<String, Object>) javascriptFencesArray[0]).get("id");
+
+		//get from shared prefs
+		Gson gson = new Gson();
+		SharedPreferences prefs = cx.getSharedPreferences("fences", Context.MODE_PRIVATE);
+		String storedHashMapString = prefs.getString("fencesHashString", "oopsDintWork");
+		java.lang.reflect.Type type = new TypeToken<HashMap<String, HashMap<String, Object>>>() {}.getType();
+		HashMap<String, Object> fencesHashMap = gson.fromJson(storedHashMapString, type);
+
+		HashMap fenceData = (HashMap) fencesHashMap.get(fenceId);
+
+		data.put("id", fenceId);
+
+		boolean canNotify = false;
+
+		if (fenceData != null) {
+			//CanNotify
+			canNotify = (boolean) fenceData.get("canNotify");
+			data.put("canNotify", canNotify);
 			//Strings
 			data.put("title", fenceData.get("title"));
 			data.put("alert", fenceData.get("message"));
@@ -230,435 +224,431 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 			data.put("sicon", fenceData.get("sicon"));
 			data.put("licon", fenceData.get("licon"));
 			data.put("bicon", fenceData.get("bicon"));
-	    }
+		}
 		//Custom Data
 		data.put("custom", javascriptFencesArray);
-		
 		data.put("event", event);
-		
- 		KrollDict props = new KrollDict();
- 		
- 		props.put("fences", data);
- 		
- 		sendMessage(props, event);
- 		
- 		localNotificationData = data;
-    	if(canNotify){
-    		showLocalNotification();
-    	}else{
-    		Log.w(LCAT, "NOTIFICATIONS ARE DESISABLED FOR THIS FENCE!");
-    	}
- 	}
 
-    /**
+		KrollDict props = new KrollDict();
+
+		props.put("fences", data);
+
+		sendMessage(props, event);
+
+		localNotificationData = data;
+		if (canNotify) {
+			showLocalNotification();
+		}
+	}
+
+	/**
      * Runs when the result of calling {@link #addGeofences()} and/or {@link #removeGeofences()}
      * is available.
      * @param task the resulting Task, containing either a result or error.
      */
-    @Override
-    public void onComplete(@NonNull Task<Void> task) {
-    	
-        if (task.isSuccessful()) {
-        	
-        	updateGeofencesAdded(!getGeofencesAdded());
-        	
-        	KrollDict props = new KrollDict();
-        	
-            if(mPendingGeofenceTask == PendingGeofenceTask.ADD){
-                getModuleInstance().fireEvent(STARTED_MONITORING, props);
-                mMonitoring = Monitoring.ON;
-            }else if(mPendingGeofenceTask == PendingGeofenceTask.REMOVE){
-                getModuleInstance().fireEvent(STOPPED_MONITORING, props);
-                mMonitoring = Monitoring.OFF;
-            }
-        } else {
-            // Get the status code for the error and log it using a user-friendly message.
-            String errorMessage = GeofenceErrorMessages.getErrorString(appContext, task.getException());
-            Log.e(LCAT, errorMessage);
-        }
-        
-        mPendingGeofenceTask = PendingGeofenceTask.NONE;
-    }
+	@Override
+	public void onComplete(@NonNull Task<Void> task)
+	{
 
-    /**
+		if (task.isSuccessful()) {
+
+			updateGeofencesAdded(!getGeofencesAdded());
+
+			KrollDict props = new KrollDict();
+
+			if (mPendingGeofenceTask == PendingGeofenceTask.ADD) {
+				getModuleInstance().fireEvent(STARTED_MONITORING, props);
+				mMonitoring = Monitoring.ON;
+			} else if (mPendingGeofenceTask == PendingGeofenceTask.REMOVE) {
+				getModuleInstance().fireEvent(STOPPED_MONITORING, props);
+				mMonitoring = Monitoring.OFF;
+			}
+		} else {
+			// Get the status code for the error and log it using a user-friendly message.
+			String errorMessage = GeofenceErrorMessages.getErrorString(appContext, task.getException());
+			Log.e(LCAT, errorMessage);
+		}
+
+		mPendingGeofenceTask = PendingGeofenceTask.NONE;
+	}
+
+	/**
      * Gets a PendingIntent to send with the request to add or remove Geofences. Location Services
      * issues the Intent inside this PendingIntent whenever a geofence transition occurs for the
      * current list of geofences.
      *
      * @return A PendingIntent for the IntentService that handles geofence transitions.
      */
-    private static PendingIntent getGeofencePendingIntent() {
-        // Reuse the PendingIntent if we already have it.
-        if (mGeofencePendingIntent != null) {
-            return mGeofencePendingIntent;
-        }
-        
-        Log.d(LCAT, "ATTEMPTING TO start service");
-        
-        Intent intent = new Intent(appContext, GeofenceBroadcastReceiver.class);
-        intent.putExtra("service_name", serviceName);
-        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
-        // addGeofences() and removeGeofences().
-        mGeofencePendingIntent = PendingIntent.getBroadcast(appContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        
-        return mGeofencePendingIntent;
-    }
+	private static PendingIntent getGeofencePendingIntent()
+	{
+		// Reuse the PendingIntent if we already have it.
+		if (mGeofencePendingIntent != null) {
+			return mGeofencePendingIntent;
+		}
 
-    /**
+		Log.d(LCAT, "Trying to start service: " + serviceName);
+
+		Intent intent = new Intent(appContext, GeofenceBroadcastReceiver.class);
+		intent.putExtra("service_name", serviceName);
+		// We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
+		// addGeofences() and removeGeofences().
+		mGeofencePendingIntent = PendingIntent.getBroadcast(appContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+		return mGeofencePendingIntent;
+	}
+
+	/**
      * This sample hard codes geofence data. A real app might dynamically create geofences based on
      * the user's location.
      */
-    public static void populateGeofenceList( HashMap< String, HashMap< String, Object>> fences) {
-    	
-        for (Entry<String, HashMap<String, Object>> entry : fences.entrySet()) {
-        	
-            mGeofenceList.add(new Geofence.Builder()
-                    // Set the request ID of the geofence. This is a string to identify this
-                    // geofence.
-                    .setRequestId(entry.getKey())
+	public static void populateGeofenceList(HashMap<String, HashMap<String, Object>> fences)
+	{
+		for (Entry<String, HashMap<String, Object>> entry : fences.entrySet()) {
+			mGeofenceList.add(new Geofence
+								  .Builder()
+								  // Set the request ID of the geofence. This is a string to identify this
+								  // geofence.
+								  .setRequestId(entry.getKey())
 
-                    // Set the circular region of this geofence.
-                    .setCircularRegion(
-                		(Double) entry.getValue().get("latitude"),
-                		(Double) entry.getValue().get("longitude"),
-                        ((Double) entry.getValue().get("radius")).floatValue()
-                    )
+								  // Set the circular region of this geofence.
+								  .setCircularRegion((Double) entry.getValue().get("latitude"),
+													 (Double) entry.getValue().get("longitude"),
+													 ((Double) entry.getValue().get("radius")).floatValue())
 
-                    // Set the expiration duration of the geofence. This geofence gets automatically
-                    // removed after this period of time.
-                    .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                    
-                    // Set the period of time the user neeeds to be inside the fence.
-                    .setLoiteringDelay(((Double)entry.getValue().get("dwellTime")).intValue())
+								  // Set the expiration duration of the geofence. This geofence gets automatically
+								  // removed after this period of time.
+								  .setExpirationDuration(Geofence.NEVER_EXPIRE)
 
-                    // Set the transition types of interest. Alerts are only generated for these
-                    // transition. We track entry and exit transitions in this sample.
-                    .setTransitionTypes(((Double)entry.getValue().get("transitions")).intValue())
+								  // Set the period of time the user neeeds to be inside the fence.
+								  .setLoiteringDelay(((Double) entry.getValue().get("dwellTime")).intValue())
 
-                    // Create the geofence.
-                    .build());
-        }
-        
-    }
-    
-    public static void startMonitoringFencesFromBroadcastReceiver(OnCompleteListener<Void> onRebootBroadcastReceiver){
-		mGeofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent()).addOnCompleteListener(onRebootBroadcastReceiver);
-    }
-    
-    /**
+								  // Set the transition types of interest. Alerts are only generated for these
+								  // transition. We track entry and exit transitions in this sample.
+								  .setTransitionTypes(((Double) entry.getValue().get("transitions")).intValue())
+
+								  // Create the geofence.
+								  .build());
+		}
+	}
+
+	public static void startMonitoringFencesFromBroadcastReceiver(OnCompleteListener<Void> onRebootBroadcastReceiver)
+	{
+		mGeofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
+			.addOnCompleteListener(onRebootBroadcastReceiver);
+	}
+
+	/**
      * Returns true if geofences were added, otherwise false.
      */
-    private boolean getGeofencesAdded() {
-        return PreferenceManager.getDefaultSharedPreferences(appContext).getBoolean(Constants.GEOFENCES_ADDED_KEY, false);
-    }
+	private boolean getGeofencesAdded()
+	{
+		return PreferenceManager.getDefaultSharedPreferences(appContext)
+			.getBoolean(Constants.GEOFENCES_ADDED_KEY, false);
+	}
 
-    /**
+	/**
      * Stores whether geofences were added or removed in {@link SharedPreferences};
      *
      * @param added Whether geofences were added or removed.
      */
-    private void updateGeofencesAdded(boolean added) {
-    	Log.i(LCAT, "updateGeofencesAdded()");
-        PreferenceManager.getDefaultSharedPreferences(appContext)
-	        .edit()
-	        .putBoolean(Constants.GEOFENCES_ADDED_KEY, added)
-	        .apply();
-    }
+	private void updateGeofencesAdded(boolean added)
+	{
+		PreferenceManager.getDefaultSharedPreferences(appContext)
+			.edit()
+			.putBoolean(Constants.GEOFENCES_ADDED_KEY, added)
+			.apply();
+	}
 
-    /**
+	/**
      * Return the current state of the permissions needed.
      */
-    private boolean checkPermissions() {
-        int permissionState = ActivityCompat.checkSelfPermission(appContext, Manifest.permission.ACCESS_FINE_LOCATION);
-        return permissionState == PackageManager.PERMISSION_GRANTED;
-    }
-	
+	private boolean checkPermissions()
+	{
+		int permissionState = ActivityCompat.checkSelfPermission(appContext, Manifest.permission.ACCESS_FINE_LOCATION);
+		return permissionState == PackageManager.PERMISSION_GRANTED;
+	}
+
 	// Methods
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Kroll.method
-	public void addGeofences(KrollDict d) {
-        
-		Log.d(LCAT, "process properties");
-		
+	public void addGeofences(KrollDict d)
+	{
 		Boolean successfullyAddedFecens = true;
-		
-		if(d.containsKey((Object)"service")){
+
+		if (d.containsKey((Object) "service")) {
 			serviceName = (String) d.getString("service");
 		}
-		
-		if (d.containsKey((Object)"cleanExistingFences")) {
-			boolean cf = (boolean) d.get("cleanExistingFences");
-			if(cf == true){
+
+		if (d.containsKey((Object) "clearExistingFences")) {
+			boolean cf = (boolean) d.get("clearExistingFences");
+			if (cf == true) {
 				clearExistingFences();
-				Log.i(LCAT, "Clearing Geofences...˜");
-			}else{
-				Log.i(LCAT, "Fences will be added to existing fences array list. If you want to clear previous fences, use 'clearExistingFences : true˜");
+				Log.d(LCAT, "Clearing Geofences...˜");
+			} else {
+				Log.d(
+					LCAT,
+					"Fences will be added to existing fences array list. If you want to clear previous fences, use 'clearExistingFences : true˜");
 			}
 		}
-        if (d.containsKey((Object)"fences")) {
-        	
-        	Object[] fencesArray = (Object[]) d.get("fences");
-        	
-        	for (int i = 0; i < fencesArray.length; i++) {
-        		
-				HashMap<?, ?> fence = new HashMap();
-        		fence = (HashMap<?, ?>) fencesArray[i];
-                
-    			if (fence.containsKey("latitude") &&
-    				fence.containsKey("longitude") &&
-    				fence.containsKey("radius") &&
-    				fence.containsKey("id")) {
-    				
-    				HashMap fenceData = new HashMap();
-    				String fenceId = TiConvert.toString(fence.get("id"));
-    				
-    				//Geofence Data
-    				fenceData.put("latitude", TiConvert.toDouble(fence.get("latitude")));
-    				fenceData.put("longitude", TiConvert.toDouble(fence.get ("longitude")));
-    				fenceData.put("radius", TiConvert.toDouble(fence.get ("radius")));
-    				
-    				if(fence.containsKey("dwellTime")){
-    					fenceData.put("dwellTime", TiConvert.toDouble(fence.get("dwellTime")));
-    				}else{
-    					Integer dwellTime = (3 * 60 * 1000);
-    					fenceData.put("dwellTime", TiConvert.toDouble(dwellTime));
-    				}
-    				
-    				if(fence.containsKey("transitions")){
-    					Object[] transitions =  (Object[]) fence.get("transitions");
-    					
-    					Integer transitionBitwise = TiConvert.toInt(transitions[0]);
-    					
-    					for (int j = 1; j < transitions.length; j++) {
-    						transitionBitwise |= TiConvert.toInt(transitions[j]);
-						}
-    					
-    					fenceData.put("transitions", Double.parseDouble(String.valueOf(transitionBitwise)));
-    				}
-    				
-    				if(fence.containsKey("canNotify")){
-    					fenceData.put("canNotify", TiConvert.toBoolean(fence.get("canNotify")));
-    				}else{
-    					fenceData.put("canNotify", true);
-    				}
-    				
-    				if(fence.containsKey("type")){
-    					fenceData.put("type", TiConvert.toString(fence.get("type")));
-    				}else{
-    					fenceData.put("type", Constants.TYPE_PLACE_FENCE);
-    				}
-    				
-    				//Notification Data
-    				if(fence.containsKey("title")){
-    					fenceData.put("title", TiConvert.toString(fence.get("title")));
-    				}else{
-    					fenceData.put("title", "Geofence");
-    				}
-    				
-    				if(fence.containsKey("message")){
-    					fenceData.put("message", TiConvert.toString(fence.get("message")));
-    				}else{
-    					fenceData.put("message", "Você esta em " + fenceData.get("title"));
-    				}
-    				
-    				if(fence.containsKey("ledColor")){
-    					fenceData.put("ledc", TiConvert.toString(fence.get("ledColor")));
-    				}else{
-    					fenceData.put("ledc", "#FF009688");
-    				}
-    				
-    				if(fence.containsKey("accentColor")){
-    					fenceData.put("bgac", TiConvert.toString(fence.get("accentColor")));
-    				}else{
-    					fenceData.put("bgac", "#FF009688");
-    				}
-    				
-    				if(fence.containsKey("smallIcon")){
-    					fenceData.put("sicon", TiConvert.toString(fence.get("smallIcon")));
-    				}else{
-    					fenceData.put("sicon", "@drawable/ic_my_location_black_24dp");
-    				}
-    				
-    				if(fence.containsKey("largeIcon")){
-    					fenceData.put("licon", TiConvert.toString(fence.get("largeIcon")));
-    				}else{
-    					fenceData.put("licon", "http://framework.sparklogix.com/wp-content/uploads/2016/01/globe1.png");
-    				}
-    				
-    				if(fence.containsKey("bigImage")){
-    					fenceData.put("bicon", TiConvert.toString(fence.get("bigImage")));
-    					
-    					if(fence.containsKey("showGooglePlaceBigImage")){
-    			        	Log.w(LCAT, "showPlaceBigImage param is ignored when bigImage is set");
-    					}
-    					
-    				}else if(fence.containsKey("showGooglePlaceBigImage")){
-    					if(TiConvert.toBoolean(fence.containsKey("showGooglePlaceBigImage")) == true){
-    						String imageUrl = "https://maps.googleapis.com/maps/api/streetview?size=512x256&location=" + TiConvert.toString(fence.get("latitude")) + "," + TiConvert.toString(fence.get("longitude")) + "&fov=120&pitch=0";
-        					fenceData.put("bicon", imageUrl);
-    					}
-    				}
+		if (d.containsKey((Object) "fences")) {
 
-    				FENCES.put(fenceId, fenceData);
-    			}else{
-    				successfullyAddedFecens = false;
-    				break;
-    			}
+			Object[] fencesArray = (Object[]) d.get("fences");
+
+			for (int i = 0; i < fencesArray.length; i++) {
+
+				HashMap<?, ?> fence = new HashMap();
+				fence = (HashMap<?, ?>) fencesArray[i];
+
+				if (fence.containsKey("latitude") && fence.containsKey("longitude") && fence.containsKey("radius")
+					&& fence.containsKey("id")) {
+
+					HashMap fenceData = new HashMap();
+					String fenceId = TiConvert.toString(fence.get("id"));
+
+					//Geofence Data
+					fenceData.put("latitude", TiConvert.toDouble(fence.get("latitude")));
+					fenceData.put("longitude", TiConvert.toDouble(fence.get("longitude")));
+					fenceData.put("radius", TiConvert.toDouble(fence.get("radius")));
+
+					if (fence.containsKey("dwellTime")) {
+						fenceData.put("dwellTime", TiConvert.toDouble(fence.get("dwellTime")));
+					} else {
+						Integer dwellTime = (3 * 60 * 1000);
+						fenceData.put("dwellTime", TiConvert.toDouble(dwellTime));
+					}
+
+					if (fence.containsKey("transitions")) {
+						Object[] transitions = (Object[]) fence.get("transitions");
+
+						Integer transitionBitwise = TiConvert.toInt(transitions[0]);
+
+						for (int j = 1; j < transitions.length; j++) {
+							transitionBitwise |= TiConvert.toInt(transitions[j]);
+						}
+
+						fenceData.put("transitions", Double.parseDouble(String.valueOf(transitionBitwise)));
+					}
+
+					if (fence.containsKey("canNotify")) {
+						fenceData.put("canNotify", TiConvert.toBoolean(fence.get("canNotify")));
+					} else {
+						fenceData.put("canNotify", true);
+					}
+
+					if (fence.containsKey("type")) {
+						fenceData.put("type", TiConvert.toString(fence.get("type")));
+					} else {
+						fenceData.put("type", Constants.TYPE_PLACE_FENCE);
+					}
+
+					//Notification Data
+					if (fence.containsKey("title")) {
+						fenceData.put("title", TiConvert.toString(fence.get("title")));
+					} else {
+						fenceData.put("title", "Geofence");
+					}
+
+					if (fence.containsKey("message")) {
+						fenceData.put("message", TiConvert.toString(fence.get("message")));
+					} else {
+						fenceData.put("message", fenceData.get("title"));
+					}
+
+					if (fence.containsKey("ledColor")) {
+						fenceData.put("ledc", TiConvert.toString(fence.get("ledColor")));
+					} else {
+						fenceData.put("ledc", "#FF009688");
+					}
+
+					if (fence.containsKey("accentColor")) {
+						fenceData.put("bgac", TiConvert.toString(fence.get("accentColor")));
+					} else {
+						fenceData.put("bgac", "#FF009688");
+					}
+
+					if (fence.containsKey("smallIcon")) {
+						fenceData.put("sicon", TiConvert.toString(fence.get("smallIcon")));
+					} else {
+						fenceData.put("sicon", "@drawable/ic_my_location_black_24dp");
+					}
+
+					if (fence.containsKey("largeIcon")) {
+						fenceData.put("licon", TiConvert.toString(fence.get("largeIcon")));
+					} else {
+						fenceData.put("licon", "@drawable/ic_my_location_black_24dp");
+					}
+
+					if (fence.containsKey("bigImage")) {
+						fenceData.put("bicon", TiConvert.toString(fence.get("bigImage")));
+
+						if (fence.containsKey("showGooglePlaceBigImage")) {
+							Log.w(LCAT, "showPlaceBigImage param is ignored when bigImage is set");
+						}
+
+					} else if (fence.containsKey("showGooglePlaceBigImage")) {
+						if (TiConvert.toBoolean(fence.containsKey("showGooglePlaceBigImage")) == true) {
+							String imageUrl = "https://maps.googleapis.com/maps/api/streetview?size=512x256&location="
+											  + TiConvert.toString(fence.get("latitude")) + ","
+											  + TiConvert.toString(fence.get("longitude")) + "&fov=120&pitch=0";
+							fenceData.put("bicon", imageUrl);
+						}
+					}
+
+					FENCES.put(fenceId, fenceData);
+				} else {
+					successfullyAddedFecens = false;
+					break;
+				}
 			}
-        }
-        
-        if(successfullyAddedFecens){
-        	KrollDict props = new KrollDict();
-	 		props.put("message", "All fences added successfully.");
+		}
+
+		if (successfullyAddedFecens) {
+			KrollDict props = new KrollDict();
+			props.put("message", "All fences added successfully.");
 			getModuleInstance().fireEvent(GEOFENCES_ADDED, props);
-			
+
 			Gson gson = new Gson();
 			String hashMapString = gson.toJson(FENCES);
-			
+
 			//save in shared prefs
-		    SharedPreferences prefs = appContext.getSharedPreferences("fences", Context.MODE_PRIVATE);
-		    prefs.edit().putString("fencesHashString", hashMapString).apply();
-			
-        }else{
-        	KrollDict props = new KrollDict();
-        	
-        	String message = "All fences must have LATITUDE, LONGITUDE, RADIUS and ID";
-        	Log.e(LCAT, "addGeofences ERROR - " + message);
-        	
-	 		props.put("message", "All fences must have LATITUDE, LONGITUDE, RADIUS and ID");
+			SharedPreferences prefs = appContext.getSharedPreferences("fences", Context.MODE_PRIVATE);
+			prefs.edit().putString("fencesHashString", hashMapString).apply();
+		} else {
+			KrollDict props = new KrollDict();
+
+			String message = "All fences must have LATITUDE, LONGITUDE, RADIUS and ID";
+
+			props.put("message", "All fences must have LATITUDE, LONGITUDE, RADIUS and ID");
 			getModuleInstance().fireEvent(ERROR, props);
-        }
-        
-        populateGeofenceList(FENCES);
-    }
-	
+		}
+
+		populateGeofenceList(FENCES);
+	}
+
 	// Methods
 	@Kroll.method
-	public void clearExistingFences() {
-		if(!FENCES.isEmpty()){
+	public void clearExistingFences()
+	{
+		if (!FENCES.isEmpty()) {
 			stopMonitoring();
 			FENCES.clear();
 			mGeofenceList.clear();
-		}else{
+		} else {
 			Log.w(LCAT, "clearExistingFences - Fence list was already empty. Nothing to do!");
 		}
 	}
-	
+
 	@Kroll.method
-	public void startMonitoring(){
+	public void startMonitoring()
+	{
+		Log.d(LCAT, "start monitoring");
 		if (!checkPermissions()) {
-        	Log.e(LCAT, "addGeofences - Insuficient permissions");
-        }else{
-        	Log.i(LCAT, "adding Geofences");
-        	if(!mGeofenceList.isEmpty()){
-        		if(mMonitoring == Monitoring.OFF){
-        			mPendingGeofenceTask = PendingGeofenceTask.ADD;
-        			mGeofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent()).addOnCompleteListener(this);
-        		}else{
-        			Log.w(LCAT, "startMonitoring - Nothing to do. Was already monitoring!");
-        		}
-        	}else{
-        		KrollDict props = new KrollDict();
-        		
-        		String message = "Fence list is empty. Nothing to monitor...";
-        		
-        		Log.e(LCAT, "startMonitoring ERROR - " + message);
-        		
-    	 		props.put("message", message);
-    			getModuleInstance().fireEvent(ERROR, props);
-        	}
-        }
+			Log.e(LCAT, "addGeofences - Insuficient permissions");
+		} else {
+			if (!mGeofenceList.isEmpty()) {
+				if (mMonitoring == Monitoring.OFF) {
+					mPendingGeofenceTask = PendingGeofenceTask.ADD;
+					mGeofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
+						.addOnCompleteListener(this);
+				}
+			} else {
+				KrollDict props = new KrollDict();
+
+				String message = "Fence list is empty. Nothing to monitor...";
+
+				Log.e(LCAT, "startMonitoring ERROR - " + message);
+
+				props.put("message", message);
+				getModuleInstance().fireEvent(ERROR, props);
+			}
+		}
 	}
-	
+
 	@Kroll.method
-	public void stopMonitoring(){
+	public void stopMonitoring()
+	{
 		if (!checkPermissions()) {
-	    	Log.e(LCAT, "removeGeofences - Insuficient permissions");
-	    }else{
-	    	if(!mGeofenceList.isEmpty()){
-		    	Log.i(LCAT, "stopping monitoring...");
-		    	if(mMonitoring == Monitoring.ON){
-			    	mPendingGeofenceTask = PendingGeofenceTask.REMOVE;
-			    	mGeofencingClient.removeGeofences(getGeofencePendingIntent()).addOnCompleteListener(this);
-		    	}else{
-        			Log.i(LCAT, "stopMonitoring - Nothing to do. Was not monitoring!");
-        		}
-	    	}else{
-	    		Log.i(LCAT, "stopMonitoring - Fences list in empty. Was not monitoring!");
-	    	}
-	    }
+			Log.e(LCAT, "removeGeofences - Insuficient permissions");
+		} else {
+			if (!mGeofenceList.isEmpty()) {
+				Log.d(LCAT, "stopping monitoring...");
+				if (mMonitoring == Monitoring.ON) {
+					mPendingGeofenceTask = PendingGeofenceTask.REMOVE;
+					mGeofencingClient.removeGeofences(getGeofencePendingIntent()).addOnCompleteListener(this);
+				}
+			}
+		}
 	}
-	
+
 	@Kroll.method
-	public void fireNotification(){
+	public void fireNotification()
+	{
 		showLocalNotification();
 	}
-	
+
 	@Kroll.method
-	public KrollDict getLastestFiredGeofenceTransitionData(){
-		
+	public KrollDict getLastestFiredGeofenceTransitionData()
+	{
+
 		KrollDict props = new KrollDict();
-		
-		if(lastestFiredGeofenceTransitionData != null){
+
+		if (lastestFiredGeofenceTransitionData != null) {
 			Object[] javascriptFencesArray = lastestFiredGeofenceTransitionData.toArray();
 			props.put("fences", javascriptFencesArray);
 		}
- 		
- 		props.put("event", lastestFiredGeofenceTransitionEvent);
+
+		props.put("event", lastestFiredGeofenceTransitionEvent);
 		return props;
 	}
-	
+
 	@Kroll.constant
-    public static final String ENTERED = Constants.GEOFENCES_ENTERED;
-	
+	public static final String ENTERED = Constants.GEOFENCES_ENTERED;
+
 	@Kroll.constant
-    public static final String EXITED = Constants.GEOFENCES_EXITED;
-	
+	public static final String EXITED = Constants.GEOFENCES_EXITED;
+
 	@Kroll.constant
-    public static final String DWELL = Constants.GEOFENCES_DWELL;
-	
+	public static final String DWELL = Constants.GEOFENCES_DWELL;
+
 	@Kroll.constant
-    public static final String ERROR = Constants.GEOFENCES_ERROR;
-	
+	public static final String ERROR = Constants.GEOFENCES_ERROR;
+
 	@Kroll.constant
-    public static final String STARTED_MONITORING = Constants.STARTED_MONITORING;
-	
+	public static final String STARTED_MONITORING = Constants.STARTED_MONITORING;
+
 	@Kroll.constant
-    public static final String STOPPED_MONITORING = Constants.STOPPED_MONITORING;
-	
+	public static final String STOPPED_MONITORING = Constants.STOPPED_MONITORING;
+
 	@Kroll.constant
-    public static final String GEOFENCES_ADDED = Constants.GEOFENCES_ADDED;
-	
+	public static final String GEOFENCES_ADDED = Constants.GEOFENCES_ADDED;
+
 	@Kroll.constant
-    public static final String NOTIFICATION_CLICKED = Constants.NOTIFICATION_CLICKED;
-	
+	public static final String NOTIFICATION_CLICKED = Constants.NOTIFICATION_CLICKED;
+
 	@Kroll.constant
-    public static final String NOTIFICATION_FIRED_IN_FOREGROUND = Constants.NOTIFICATION_FIRED_IN_FOREGROUND;
-	
+	public static final String NOTIFICATION_FIRED_IN_FOREGROUND = Constants.NOTIFICATION_FIRED_IN_FOREGROUND;
+
 	@Kroll.constant
-    public static final String NOTIFICATION_FIRED_IN_BACKGROUND = Constants.NOTIFICATION_FIRED_IN_BACKGROUND;
-	
+	public static final String NOTIFICATION_FIRED_IN_BACKGROUND = Constants.NOTIFICATION_FIRED_IN_BACKGROUND;
+
 	@Kroll.constant
-    public static final String TYPE_MASTER_ZONE = Constants.TYPE_MASTER_ZONE;
-	
+	public static final String TYPE_MASTER_ZONE = Constants.TYPE_MASTER_ZONE;
+
 	@Kroll.constant
-    public static final String TYPE_PLACE_FENCE = Constants.TYPE_PLACE_FENCE;
-	
+	public static final String TYPE_PLACE_FENCE = Constants.TYPE_PLACE_FENCE;
+
 	@Kroll.constant
-    public static final int GEOFENCE_TRANSITION_ENTER = Geofence.GEOFENCE_TRANSITION_ENTER;
-	
+	public static final int GEOFENCE_TRANSITION_ENTER = Geofence.GEOFENCE_TRANSITION_ENTER;
+
 	@Kroll.constant
-    public static final int GEOFENCE_TRANSITION_EXIT = Geofence.GEOFENCE_TRANSITION_EXIT;
-	
+	public static final int GEOFENCE_TRANSITION_EXIT = Geofence.GEOFENCE_TRANSITION_EXIT;
+
 	@Kroll.constant
-    public static final int GEOFENCE_TRANSITION_DWELL = Geofence.GEOFENCE_TRANSITION_DWELL;
-	
-	
+	public static final int GEOFENCE_TRANSITION_DWELL = Geofence.GEOFENCE_TRANSITION_DWELL;
+
 	//ALL NOTIFICATION RELATED ==========================================
-	private static void checkForExtras() {
-		
-		Log.i(LCAT, "Checking for Extras...");
-		
+	private static void checkForExtras()
+	{
 		Activity activity = TiApplication.getAppRootOrCurrentActivity();
 		if (activity != null) {
 			Intent intent = activity.getIntent();
@@ -668,43 +658,43 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 					extras = extras.getBundle(PROPERTY_EXTRAS);
 					HashMap<String, Object> data = GeofenceModule.convertBundleToHashMap(extras);
 					data.put("prev_state", "stopped");
-					Log.i(LCAT, "Sending message after checkForExtras() SUCCESS");
 					GeofenceModule.sendMessage(data, GeofenceModule.NOTIFICATION_CLICKED);
 					intent.removeExtra(PROPERTY_EXTRAS);
 				} else {
-					Log.i(LCAT, "checkForExtras : extras is null");
+					Log.d(LCAT, "checkForExtras : extras is null");
 				}
 			} else {
-				Log.i(LCAT, "checkForExtras : intent is null");
+				Log.d(LCAT, "checkForExtras : intent is null");
 			}
 		} else {
-			Log.i(LCAT, "checkForExtras : activity is null");
+			Log.d(LCAT, "checkForExtras : activity is null");
 		}
 	}
-	
-	public static void sendMessage(HashMap<String, Object> messageData, String eventName) {
-		
+
+	public static void sendMessage(HashMap<String, Object> messageData, String eventName)
+	{
+
 		GeofenceModule module = getModuleInstance();
-		
+
 		if (module != null && module.hasListeners(eventName)) {
 			HashMap<String, Serializable> data = new HashMap<String, Serializable>();
-			
+
 			data.put("code", 0);
 			data.put("success", true);
 			data.put("data", messageData);
-		
+
 			module.fireEvent(eventName, data);
-			
-			Log.i(LCAT, "Firing " + eventName + " event...");
+
+			Log.d(LCAT, "Firing " + eventName + " event...");
 		}
 	}
-	
-	public static void showLocalNotification() {
-		
-		if(localNotificationData != null){
+
+	public static void showLocalNotification()
+	{
+
+		if (localNotificationData != null) {
 
 			HashMap<String, Object> options = localNotificationData;
-			
 			try {
 				JSONObject reader = new JSONObject(options);
 				Bundle newExtras = new Bundle();
@@ -714,38 +704,44 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 					newExtras.putString(key, value);
 				}
 				GeofenceModule.sendNotification(newExtras);
-				
+
 				if (TiApplication.isCurrentActivityInForeground()) {
 					GeofenceModule.sendMessage(localNotificationData, GeofenceModule.NOTIFICATION_FIRED_IN_FOREGROUND);
 				} else {
 					if (KrollRuntime.getInstance().getRuntimeState() != KrollRuntime.State.DISPOSED) {
-						GeofenceModule.sendMessage(localNotificationData, GeofenceModule.NOTIFICATION_FIRED_IN_BACKGROUND);
+						GeofenceModule.sendMessage(localNotificationData,
+												   GeofenceModule.NOTIFICATION_FIRED_IN_BACKGROUND);
 					}
 				}
-				
+
 			} catch (JSONException e) {
 				Log.w(LCAT, "ERROR on sending notification!");
 			}
 		} else {
 			Log.w(LCAT, "localNotificationData is Null!");
 		}
-		
+
 		localNotificationData = null;
 	}
-	
+
 	@TargetApi(26)
-	private static NotificationChannel createOrUpdateDefaultNotificationChannel() {
+	private static NotificationChannel createOrUpdateDefaultNotificationChannel()
+	{
 		TiApplication appContext = TiApplication.getInstance();
-		NotificationManager notificationManager = (NotificationManager)appContext.getSystemService(Context.NOTIFICATION_SERVICE);
-		String channelName = TiApplication.getInstance().getAppProperties().getString("pushclient.defaultChannel", DEFAULT_CHANNEL_NAME);
-		NotificationChannel channel = new NotificationChannel(DEFAULT_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_HIGH);
+		NotificationManager notificationManager =
+			(NotificationManager) appContext.getSystemService(Context.NOTIFICATION_SERVICE);
+		String channelName =
+			TiApplication.getInstance().getAppProperties().getString("pushclient.defaultChannel", DEFAULT_CHANNEL_NAME);
+		NotificationChannel channel =
+			new NotificationChannel(DEFAULT_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_HIGH);
 		notificationManager.createNotificationChannel(channel);
 		return channel;
 	}
-	
+
 	@SuppressWarnings("deprecation")
-	public static void sendNotification(Bundle extras) {
-		
+	public static void sendNotification(Bundle extras)
+	{
+
 		if (extras == null || extras.isEmpty())
 			return;
 
@@ -909,15 +905,19 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 								notificationSound = Uri.fromFile(file);
 							} else {
 								// res folder
-								int soundId = appContext.getResources().getIdentifier(extras.getString("sound"), "raw", appContext.getPackageName());
+								int soundId = appContext.getResources().getIdentifier(extras.getString("sound"), "raw",
+																					  appContext.getPackageName());
 								if (soundId != 0) {
-									notificationSound = Uri.parse("android.resource://" + appContext.getPackageName() + "/raw/" + soundId);
+									notificationSound = Uri.parse("android.resource://" + appContext.getPackageName()
+																  + "/raw/" + soundId);
 								} else {
 									// res folder without file extension
 									String soundFile = extras.getString("sound").split("\\.")[0];
-									soundId = appContext.getResources().getIdentifier(soundFile, "raw", appContext.getPackageName());
+									soundId = appContext.getResources().getIdentifier(soundFile, "raw",
+																					  appContext.getPackageName());
 									if (soundId != 0) {
-										notificationSound = Uri.parse("android.resource://" + appContext.getPackageName() + "/raw/" + soundId);
+										notificationSound = Uri.parse(
+											"android.resource://" + appContext.getPackageName() + "/raw/" + soundId);
 									}
 								}
 							}
@@ -951,15 +951,19 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 								notificationSound = Uri.fromFile(file);
 							} else {
 								// res folder
-								int soundId = appContext.getResources().getIdentifier(extrasRoot.getString("sound"), "raw", appContext.getPackageName());
+								int soundId = appContext.getResources().getIdentifier(
+									extrasRoot.getString("sound"), "raw", appContext.getPackageName());
 								if (soundId != 0) {
-									notificationSound = Uri.parse("android.resource://" + appContext.getPackageName() + "/raw/" + soundId);
+									notificationSound = Uri.parse("android.resource://" + appContext.getPackageName()
+																  + "/raw/" + soundId);
 								} else {
 									// res folder without file extension
 									String soundFile = extrasRoot.getString("sound").split("\\.")[0];
-									soundId = appContext.getResources().getIdentifier(soundFile, "raw", appContext.getPackageName());
+									soundId = appContext.getResources().getIdentifier(soundFile, "raw",
+																					  appContext.getPackageName());
 									if (soundId != 0) {
-										notificationSound = Uri.parse("android.resource://" + appContext.getPackageName() + "/raw/" + soundId);
+										notificationSound = Uri.parse(
+											"android.resource://" + appContext.getPackageName() + "/raw/" + soundId);
 									}
 								}
 							}
@@ -968,7 +972,6 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 				}
 			}
 		}
-
 		// VIBRATE
 		if (extras.containsKey("vibrate") && extras.getString("vibrate").equalsIgnoreCase("true")) {
 			notificationDefaults |= Notification.DEFAULT_VIBRATE;
@@ -1014,27 +1017,34 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 
 		// SMALL ICON
 		if (extras.containsKey("smallIcon")) {
-			appIconId = appContext.getResources().getIdentifier(extras.getString("smallIcon"), "drawable", appContext.getPackageName());
+			appIconId = appContext.getResources().getIdentifier(extras.getString("smallIcon"), "drawable",
+																appContext.getPackageName());
 			if (appIconId == 0) {
-				Log.i(LCAT, "Unable to find resource identifier to custom smallIcon : " + extras.getString("smallIcon"));
+				Log.d(LCAT,
+					  "Unable to find resource identifier to custom smallIcon : " + extras.getString("smallIcon"));
 			}
 		} else if (extras.containsKey("sicon")) {
-			appIconId = appContext.getResources().getIdentifier(extras.getString("sicon"), "drawable", appContext.getPackageName());
+			appIconId = appContext.getResources().getIdentifier(extras.getString("sicon"), "drawable",
+																appContext.getPackageName());
 			if (appIconId == 0) {
-				Log.i(LCAT, "Unable to find resource identifier to custom sicon : " + extras.getString("sicon"));
+				Log.d(LCAT, "Unable to find resource identifier to custom sicon : " + extras.getString("sicon"));
 			}
 		} else if (extrasRoot.containsKey("smallIcon")) {
-			appIconId = appContext.getResources().getIdentifier(extrasRoot.getString("smallIcon"), "drawable", appContext.getPackageName());
+			appIconId = appContext.getResources().getIdentifier(extrasRoot.getString("smallIcon"), "drawable",
+																appContext.getPackageName());
 			if (appIconId == 0) {
-				Log.i(LCAT, "Unable to find resource identifier to custom smallIcon : " + extrasRoot.getString("smallIcon"));
+				Log.d(LCAT,
+					  "Unable to find resource identifier to custom smallIcon : " + extrasRoot.getString("smallIcon"));
 			}
 		} else if (extrasRoot.containsKey("sicon")) {
-			appIconId = appContext.getResources().getIdentifier(extrasRoot.getString("sicon"), "drawable", appContext.getPackageName());
+			appIconId = appContext.getResources().getIdentifier(extrasRoot.getString("sicon"), "drawable",
+																appContext.getPackageName());
 			if (appIconId == 0) {
-				Log.i(LCAT, "Unable to find resource identifier to custom smallIcon : " + extrasRoot.getString("sicon"));
+				Log.d(LCAT,
+					  "Unable to find resource identifier to custom smallIcon : " + extrasRoot.getString("sicon"));
 			}
 		}
-		
+
 		// BIG IMAGE
 		Bitmap bigImage = null;
 		if (extras.containsKey("bigImage")) {
@@ -1056,19 +1066,20 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 			}
 			launch.setAction("dummy_unique_action_identifyer:" + notificationId);
 
-			PendingIntent contentIntent = PendingIntent.getActivity(appContext, 0, launch, PendingIntent.FLAG_CANCEL_CURRENT);
+			PendingIntent contentIntent =
+				PendingIntent.getActivity(appContext, 0, launch, PendingIntent.FLAG_CANCEL_CURRENT);
 			NotificationCompat.Builder mBuilder = null;
 
- 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-				mBuilder = new NotificationCompat.Builder(appContext, createOrUpdateDefaultNotificationChannel().getId());
-			}
-			else {
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+				mBuilder =
+					new NotificationCompat.Builder(appContext, createOrUpdateDefaultNotificationChannel().getId());
+			} else {
 				mBuilder = new NotificationCompat.Builder(appContext);
 			}
 
-			if(bigImage != null){
+			if (bigImage != null) {
 				mBuilder.setStyle(new NotificationCompat.BigPictureStyle().bigPicture(bigImage));
-			}else{
+			} else {
 				mBuilder.setStyle(new NotificationCompat.BigTextStyle().bigText(notificationText));
 			}
 			mBuilder.setContentText(notificationText);
@@ -1190,8 +1201,8 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 					mBuilder.setVisibility(Integer.parseInt(extrasRoot.getString("vis")));
 				} catch (NumberFormatException nfe) {
 				}
-			} 
-			
+			}
+
 			//Icon background color
 			int accent_argb = 0xFFFFFFFF;
 			if (extras.containsKey("accentARGB")) {
@@ -1239,14 +1250,14 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 					}
 				}
 			}
-			
 			NotificationManager nm = (NotificationManager) appContext.getSystemService(Context.NOTIFICATION_SERVICE);
 
 			nm.notify(notificationId, mBuilder.build());
 		}
 	}
-	
-	private static Bitmap getBitmap(String url) {
+
+	private static Bitmap getBitmap(String url)
+	{
 		if (url == null)
 			return null;
 
@@ -1264,24 +1275,26 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 			}
 
 			if (bitmap == null) {
-				Log.i(LCAT, "Unable to find image from url : " + url);
+				Log.d(LCAT, "Unable to find image from url : " + url);
 			}
 		} else {
 			// from assets
 			if (bitmap == null) {
 				try {
-					TiBaseFile file = TiFileFactory.createTitaniumFile(new String[] { getPathToApplicationAsset(url) }, false);
+					TiBaseFile file =
+						TiFileFactory.createTitaniumFile(new String[] { getPathToApplicationAsset(url) }, false);
 					bitmap = TiUIHelper.createBitmap(file.getInputStream());
 				} catch (Exception ex) {
-					Log.i(LCAT, "Unable to find image [" + url + "] from assets.");
+					Log.d(LCAT, "Unable to find image [" + url + "] from assets.");
 				}
 			}
 		}
 
 		return bitmap;
 	}
-	
-	private static Bitmap getBitmapFromURL(String strURL) {
+
+	private static Bitmap getBitmapFromURL(String strURL)
+	{
 		URL url = null;
 		HttpURLConnection connection = null;
 		InputStream input = null;
@@ -1298,8 +1311,9 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 			return null;
 		}
 	}
-	
-	private static String getPathToApplicationAsset(String assetName) {
+
+	private static String getPathToApplicationAsset(String assetName)
+	{
 		// The url for an application asset can be created by resolving the
 		// specified
 		// path with the proxy context. This locates a resource relative to the
@@ -1310,8 +1324,9 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 
 		return module.resolveUrl(null, assetName);
 	}
-	
-	public static Intent getLauncherIntent(Bundle extras) {
+
+	public static Intent getLauncherIntent(Bundle extras)
+	{
 		TiApplication appContext = TiApplication.getInstance();
 		PackageManager pm = appContext.getPackageManager();
 		Intent launch = pm.getLaunchIntentForPackage(appContext.getPackageName());
@@ -1325,13 +1340,15 @@ public class GeofenceModule extends KrollModule implements OnCompleteListener<Vo
 
 		return launch;
 	}
-	
-	public static boolean hasCallbackListeners() {
+
+	public static boolean hasCallbackListeners()
+	{
 		GeofenceModule module = getModuleInstance();
 		return (module != null && module.hasListeners(NOTIFICATION_FIRED_IN_FOREGROUND));
 	}
-	
-	public static HashMap<String, Object> convertBundleToHashMap(Bundle resource) {
+
+	public static HashMap<String, Object> convertBundleToHashMap(Bundle resource)
+	{
 		HashMap<String, Object> map = new HashMap<String, Object>();
 		if (resource == null || resource.isEmpty())
 			return map;

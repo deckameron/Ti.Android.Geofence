@@ -1,4 +1,7 @@
 *bin/
+android/build/
+android/java-sources.txt
+build/
 *build/
 *.project*build/
 *.project
